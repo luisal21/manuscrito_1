@@ -71,10 +71,7 @@ hem_resu2 <- as.data.frame(hem_resu)
 str(hem_resu2)
 tapply(hem_resu2$CD, hem_resu2$especie, length)
 #write.csv(hem_resu2, file="hem_resu.csv")
-# Agrupando por especie
-hem_resu3 <- hembras %>%
-  group_by(especie) %>%
-  dplyr::summarize(CD = mean(CD), n = n())
+
 #### Estadistica descriptiva de los caracteres de flores hembra ####
 # Media
 media = hem_resu2 %>%

@@ -44,8 +44,7 @@ library(multcompView)
 library(tidyr)
 
 #### Estableciendo directorio en el cual se encuentran las bases de datos ####
-setwd("/home/luis/Documents/3_Doctorado_UNAM/a-proyecto/analisis_florales_tesis_2022")
-
+setwd("/home/luis/Documents/3_Doctorado_UNAM/manuscrito_1/data_variables")
 #### Cargando base de datos de caracteres florales de flores hembra ####
 hembras <- read.csv("flores_hembra.csv", header = T)
 head(hembras)

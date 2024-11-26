@@ -219,7 +219,7 @@ fviz_pca_ind(pca1,
 fviz_pca_ind(pca1,
              geom.ind = "point", # show points only (nbut not "text")
              col.ind = hem_resu2$especie, # color by groups
-             #palette = ,
+             #palette = "Dark2",
              #addEllipses = TRUE, # Concentration ellipses
              #ellipse.type = "convex",
             legend.title = "Species",
@@ -231,10 +231,12 @@ fviz_pca_ind(pca1,
   labs(x = "PC 1 (67.8%)", y = "PC 2 (13.3%)")+
   scale_color_manual(labels = c("CF","CPF", "CAS",
                                 "CPP", "CAA", "CM"),
-  values = c("#00AFBB", "#E7B800","#FC4E07", "#00AFDB",
-               "#E7B850", "#FC4E50"))
+  values = c("#1B9E77", "#D95F02", "#7570B3", "#E7298A",
+             "#66A61E", "#E6AB02"))
 
-colors()
+
+display.brewer.all()
+brewer.pal(n = 8, name = "Dark2")
 
 #palette = c("#00AFBB", "#E7B800","#FC4E07", "#00AFDB",
 #            "#E7B850", "#FC4E50"),

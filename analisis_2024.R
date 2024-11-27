@@ -204,19 +204,18 @@ permutest(dispersion6)
 plot(dispersion6, hull=FALSE, ellipse=T) ##sd ellipse
 
 
-#### Base de datos de caracteres florales de flores Macho de 6 especies ####
-# Cucurbita medidas en 2021 y en 2022
+#### Database of floral traits of staminate flowers of Cucurbita species ####
 machos <- read.csv("flores_macho.csv", header = T)
 head(machos)
 str(machos)
 tapply(machos$CD, list(machos$especie, machos$sitio), length)
-tapply(machos$CD, list(machos$especie, machos$tratamiento), length)
 tapply(machos$CD, machos$sitio, length)
-# subset de datos de Morelia
+
+# subset of Morelia flowers
 machos = subset(machos, sitio == "morelia")
 str(machos)
 
-# Agrupando por individuos
+# Clustering by plant ID
 machos2 = machos %>%
   group_by(año, condicion, especie, id_planta) %>%
   summarise(CD = mean(CD), TL = mean(TL), CL = mean(CL), TD1 = mean(TD1),
@@ -226,34 +225,33 @@ str(machos2)
 tapply(machos2$CD, machos2$especie, length)
 #View(machos2)
 #write.csv(machos2, file = "machos2_prom.csv")
-# Agrupando por especie
-ma_sum %>%
-  group_by(especie) %>%
-  summarise(CD = mean(CD), n = n())
 
-#### Estadistica descriptiva de las flores macho ####
-# Media
+
+#### Descriptive statistics of staminate flowers ####
+# Mean
 machos3 = machos2 %>%
   group_by(especie) %>%
   summarise(CD = mean(CD), TL = mean(TL), CL = mean(CL), TD1 = mean(TD1),
             TD2 = mean(TD2), TD3 = mean(TD3), NDm = mean(NDm), AD = mean(AD),
             StL = mean(StL), AL = mean(AL), VN = mean(VN), n = n())
-View(machos3)
+# exporting mean by floral trait
 write.csv(machos3, file = "machos_mean.csv")
-# Error estandar
+
+# Standard error
 machos %>%
   group_by(especie) %>%
   summarise(CD = es(CD), TL = es(TL), CL = es(CL), TD1 = es(TD1), 
             TD2 = es(TD2), TD3 = es(TD3), NDm = es(NDm), AD = es(AD), 
             StL = es(StL), AL = es(AL), VN = es(vol_nec), n = n())
-# Coeficiente de variación
+
+# Coefficient of variance
 machos %>%
   group_by(especie) %>%
   summarise(CD = cv(CD), TL = cv(TL), CL = cv(CL), TD1 = cv(TD1),
             TD2 = cv(TD2), TD3 = cv(TD3), NDm = cv(NDm), AD = cv(AD), 
             StL = cv(StL), AL = cv(AL), VN = cv(vol_nec), n = n())
 
-#### Principal component analysis (PCA) de las flores macho ####
+#### Principal component analysis (PCA) of staminate floral traits ####
 head(machos2)
 machos2 = as.data.frame(machos2)
 str(machos2)
@@ -276,8 +274,6 @@ var = get_pca_var(pca2); var
 fviz_pca_var(pca2, col.var = "black")
 # Calidad de la representación de las variables en el mapa de factores
 head(var$cos2)
-# Cargando paqueteria "corrplot" para visualizar correlaciones
-library(corrplot)
 # Correlaciones entre calidades (cos2)
 corrplot(var$cos2, is.corr = F)
 # Visualizando la calidad de la representación, que variables estan mejor
@@ -301,17 +297,6 @@ fviz_contrib(pca2, choice = "var", axes = 1:2, top = 10)
 fviz_pca_var(pca2, col.var = "contrib",
              gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07")
 )
-
-# Solo caracteres del nectar
-#fviz_pca_var(pca2, col.var = factor(c("nectar","nectar","nectar","nectar",
-#                                      "nectar","aminoacid","aminoacid",
-#                                      "aminoacid","aminoacid","aminoacid",
-#                                      "aminoacid","aminoacid","aminoacid",
-#                                      "aminoacid","aminoacid","aminoacid",
-#                                      "aminoacid","aminoacid","aminoacid",
-#                                      "aminoacid","aminoacid","aminoacid")), 
-#             palette = c("#0073C2FF", "#EFC000FF"),
-#             legend.title = "Cluster")
 
 ### Gráfica de individuos (filas)
 ind = get_pca_ind(pca2)
@@ -361,46 +346,15 @@ fviz_pca_ind(pca2,
   labs(x = "PC 1 (53.2%)", y = "PC 2 (21.9%)")
 
 # Agrupado por especie
-#fviz_pca_ind(pca1,
-#             geom.ind = "point", # show points only (nbut not "text")
-#             col.ind = hem_resu2$especie, # color by groups
-#             palette = c("#00AFBB", "#E7B800","#FC4E07", "#00AFDB",
-#                         "#E7B850", "#FC4E50"),
-#             addEllipses = TRUE, # Concentration ellipses
-#ellipse.type = "confidence",
-#             legend.title = "Groups"
-#)
-### agrupado por condición + las variables
-fviz_pca_biplot(pca2,
-                # Fill individuals by groups
-                geom.ind = "point",
-                fill.ind = machos2$condicion, col.ind = "black",
-                pointshape = 21, pointsize = 2,
-                palette = "jco",
-                #addEllipses = TRUE,
-                # Variables
-                #alpha.var = "contrib",  col.var = "contrib",
-                #repel = TRUE,
-                legend.title = "Condition",
-                title = ""
-)+
-  scale_color_manual(labels = c("Domesticated", "Wild"),
-                     values= c("#00AFBB", "#E7B800"))+
-  labs(x = "PC 1 (53.2%)", y = "PC 2 (21.9%)")
-
-### agrupado por especies + las variables
-#fviz_pca_biplot(pca2,
-#               col.ind = hem_resu2$especies,
-#                addEllipses = TRUE, label = "var",
-#                col.var = "black", repel = TRUE,
-#                legend.title = "Species"
-#)
-
-# normalidad de variables
-mvn(machos2[5:14], mvnTest = "hz", univariateTest = "SW", 
-    univariatePlot = "histogram")
-
-head(machos2[5:14])
+fviz_pca_ind(pca1,
+             geom.ind = "point", # show points only (nbut not "text")
+             col.ind = hem_resu2$especie, # color by groups
+             palette = c("#00AFBB", "#E7B800","#FC4E07", "#00AFDB",
+                         "#E7B850", "#FC4E50"),
+             addEllipses = TRUE, # Concentration ellipses
+ellipse.type = "confidence",
+             legend.title = "Groups"
+)
 
 ### PERMANOVA de flores macho
 head(machos2)

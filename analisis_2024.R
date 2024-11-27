@@ -425,7 +425,7 @@ boxplot(mac_nec$VN ~ mac_nec$especie)
 #write.csv(hem_nec, file = "nectar_female.csv")
 #write.csv(mac_nec, file = "nectar_male.csv")
 
-# Cargando base conjunta de nectar 
+# Cargando base conjunta de volumen de nectar 
 volumen = read.csv("nectar_volume.csv", header = T)
 head(volumen)
 str(volumen)
@@ -434,6 +434,7 @@ shapiro.test(volumen$VN)
 shapiro.test(log(volumen$VN))
 hist(log(volumen$VN))
 
+# GLM of nectar volume by species and floral sex
 volu = glm(log(VN) ~ especie*sexo, data = volumen, family = gaussian)
 summary(volu) #, dispersion=1
 Anova(volu)

@@ -453,7 +453,7 @@ model_means_cld_volu <- cld(object = volu_compa.m,
 model_means_cld_volu
 
 
-
+# GLM with Gamma distribution
 volu2 = glm(VN ~ especie*sexo, data = volumen, family = Gamma)
 summary(volu2) #, dispersion=1
 Anova(volu2)

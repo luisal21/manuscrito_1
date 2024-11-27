@@ -163,10 +163,13 @@ fviz_contrib(pca1, choice = "ind", axes = 1:2)
 
 
 # Clustering by species
+hem_resu2 <- hem_resu2 %>%
+  mutate(especie2 = fct_relevel(especie2,
+                                "CF","CPF", "CAS", "CPP", "CAA", "CM"))
 pca_hembras <- fviz_pca_ind(pca1,
              #geom.ind = "point", # show points only (nbut not "text")
-             habillage = hem_resu2$especie, # color by groups
-            #palette = "Dark2",
+             habillage = hem_resu2$especie2, # color by groups
+            palette = "Dark2",
              addEllipses = TRUE, # Concentration ellipses
              ellipse.type = "confidence",
             legend.title = "Species",
@@ -175,11 +178,9 @@ pca_hembras <- fviz_pca_ind(pca1,
             pointsize = 2,
             label = "none"
 )+
-  labs(x = "PC 1 (67.8%)", y = "PC 2 (13.3%)")+
-  scale_color_manual(labels = c("CF","CPF", "CAS",
-                                "CPP", "CAA", "CM"),
-  values = c("#1B9E77", "#D95F02", "#7570B3", "#E7298A",
-             "#66A61E", "#E6AB02"))
+  labs(x = "PC 1 (67.8%)", y = "PC 2 (13.3%)")
+  #theme(legend.position = "none")
+
 pca_hembras
 
 ### PERMANOVA of pistillate flowers
@@ -217,12 +218,12 @@ str(machos)
 
 # Clustering by plant ID
 machos2 = machos %>%
-  group_by(año, condicion, especie, id_planta) %>%
+  group_by(año, condicion, especie, especie2, id_planta) %>%
   summarise(CD = mean(CD), TL = mean(TL), CL = mean(CL), TD1 = mean(TD1),
             TD2 = mean(TD2), TD3 = mean(TD3), NDm = mean(NDm), AD = mean(AD),
             StL = mean(StL), AL = mean(AL), VN = mean(vol_nec), n = n())
 str(machos2)
-tapply(machos2$CD, machos2$especie, length)
+tapply(machos2$CD, machos2$especie2, length)
 #View(machos2)
 #write.csv(machos2, file = "machos2_prom.csv")
 
@@ -255,8 +256,8 @@ machos %>%
 head(machos2)
 machos2 = as.data.frame(machos2)
 str(machos2)
-pairs(machos2[5:14])
-pca2 <- prcomp(machos2[, 5:14], scale = T)
+pairs(machos2[6:15])
+pca2 <- prcomp(machos2[, 6:15], scale = T)
 summary(pca2)
 pca2$rotation[, 1:2]
 #write.csv(pca1$rotation[, 1:2], file = "pca_hembras.csv")
@@ -316,40 +317,18 @@ fviz_pca_ind(pca2, pointsize = "cos2",
 )
 # Total contribution on PC1 and PC2
 fviz_contrib(pca2, choice = "ind", axes = 1:2)
-# Agrupado por condición (SIN elipse)
-fviz_pca_ind(pca2,
-             geom.ind = "point", # show points only (nbut not "text")
-             fill.ind = machos2$condicion, # color by groups
-             palette = c("#00AFBB", "#E7B800"),
-             #addEllipses = TRUE, # Concentration ellipses
-             #ellipse.type = "euclid",
-             legend.title = "Condition",
-             title = "",
-             pointshape=21,
-             pointsize = 2
-)+
-labs(x = "PC 1 (53.2%)", y = "PC 2 (21.9%)")
 
-# Agrupado por condición (CON elipse)
-fviz_pca_ind(pca2,
-             geom.ind = "point", # show points only (nbut not "text")
-             fill.ind = machos2$condicion, # color by groups
-             palette = c("#00AFBB", "#E7B800"),
-             addEllipses = TRUE, # Concentration ellipses
-             #ellipse.type = "euclid",
-             legend.title = "Condition",
-             title = "",
-             pointshape=21,
-             pointsize = 2,
-             label = "none"
-)+
-  labs(x = "PC 1 (53.2%)", y = "PC 2 (21.9%)")
 
 # Clustering by species
-fviz_pca_ind(pca2,
+
+machos2 <- machos2 %>%
+  mutate(especie2 = fct_relevel(especie2,
+                    "CF","CPF", "CAS", "CPP", "CAA", "CM"))
+pca_machos <- 
+  fviz_pca_ind(pca2,
              geom.ind = "point", # show points only (nbut not "text")
-             col.ind = machos2$especie, # color by groups
-             #palette = "Dark2",
+             col.ind = machos2$especie2, # color by groups
+             palette = "Dark2",
              addEllipses = TRUE, # Concentration ellipses
              ellipse.type = "confidence",
              legend.title = "Species",
@@ -358,24 +337,33 @@ fviz_pca_ind(pca2,
              pointsize = 2,
              #label = "none"
 )+
-  labs(x = "PC 1 (53.2%)", y = "PC 2 (21.9%)")+
-  scale_color_manual(labels = c("CF","CPF", "CAS",
-                                "CPP", "CAA", "CM"),
-                     values = c("#1B9E77", "#D95F02", "#7570B3", "#E7298A",
-                                "#66A61E", "#E6AB02"))
+  labs(x = "PC 1 (53.2%)", y = "PC 2 (21.9%)")
+ #theme(legend.position = "none")
 
 
+pca_hembras
+pca_machos
 
-### PERMANOVA de flores macho
+# code to paste graphs
+# loading packages
+library(gridExtra)
+library(cowplot)
+library(ggpubr)
+# joining plots
+gt <- ggarrange(pca_hembras, pca_machos,
+                ncol = 1, nrow = 2, common.legend = TRUE, legend = "right",
+                labels="AUTO")
+gt
+# Exporting plot
+ggsave("nectar.jpg", device = "jpg", width = 23, height = 23,
+       units = "cm", dpi = 300)
+
+
+### PERMANOVA of staminate flowers
 head(machos2)
 str(machos2)
-dune6 = machos2[5:14]
+dune6 = machos2[6:15]
 # Calculando distancia euclidiana
-set.seed(0)
-# calculando PERMANOVA por condición
-dune.div6 <- adonis2(dune6 ~ condicion, data = machos2,
-                     permutations = 999, method="euclidean")
-dune.div6
 set.seed(0)
 # calculando PERMANOVA por especie
 dune.div7 <- adonis2(dune6 ~ especie, data = machos2,
@@ -398,21 +386,6 @@ plot(dispersion6, hull=FALSE, ellipse=T) ##sd ellipse
 dispersion6 <- betadisper(dune.dist5, group=amino$sexo_flor)
 permutest(dispersion6)
 plot(dispersion6, hull=FALSE, ellipse=T) ##sd ellipse
-
-
-# Joining PCoA plot from female and male flowers
-library(gridExtra)
-library(cowplot)
-library(ggpubr)
-
-# uniendo graficas
-gt <- grid.arrange(calf1, calf3,
-                   ncol = 1, nrow = 2)
-# Add labels to the arranged plots
-p <- as_ggplot(gt) +                                # transform to a ggplot
-  draw_plot_label(label = c("A", "B"), size = 15,
-                  x = c(0,0), y = c(1,.5))#Add labels
-p
 
 
 #### VOLUMEN DE NECTAR ####
@@ -444,43 +417,11 @@ mac_nec <- machos3 %>%
 tapply(mac_nec$VN, mac_nec$condicion, mean)
 tapply(mac_nec$VN, mac_nec$condicion, es)
 tapply(mac_nec$VN, mac_nec$condicion, length)
-boxplot(mac_nec$VN ~ mac_nec$condicion)
-
-# analisis de normalidad del volumen de nectar
-# Hembras
-hist(hem_nec$VN)
-hist(sqrt(hem_nec$VN))
-shapiro.test(hem_nec$VN)
-shapiro.test(sqrt(hem_nec$VN)) # raiz cuadrada
-
-# Machos
-hist(mac_nec$VN)
-hist(log(mac_nec$VN))
-shapiro.test(mac_nec$VN)
-shapiro.test(log(mac_nec$VN)) # logaritmo
-
-### Análisis estadistico del volumen de nectar
-# Hembras
-aov_hemnec = aov(sqrt(VN) ~ condición, data = hem_nec)
-summary(aov_hemnec)
-# otra opción
-#GLM con distribución gamma
-glm_hemnec = glm(VN ~ condición, data = hem_nec, family = Gamma)
-summary(glm_hemnec)
-anova(glm_hemnec)
-
-# Machos
-aov_macnec = aov(log(VN) ~ condicion, data = mac_nec)
-summary(aov_macnec)
-# otra opción-GLM
-glm_macnec = glm(VN ~ condicion, data = mac_nec, family = Gamma)
-summary(glm_macnec)
-anova(glm_macnec)
-
+boxplot(mac_nec$VN ~ mac_nec$especie)
 
 ### Uniendo base de hembras y machos
-str(hem_nec)
-str(mac_nec)
+#str(hem_nec)
+#str(mac_nec)
 #write.csv(hem_nec, file = "nectar_female.csv")
 #write.csv(mac_nec, file = "nectar_male.csv")
 

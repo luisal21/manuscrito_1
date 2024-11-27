@@ -163,24 +163,24 @@ fviz_contrib(pca1, choice = "ind", axes = 1:2)
 
 
 # Clustering by species
-fviz_pca_ind(pca1,
-             geom.ind = "point", # show points only (nbut not "text")
-             col.ind = hem_resu2$especie, # color by groups
-             #palette = "Dark2",
-             #addEllipses = TRUE, # Concentration ellipses
-             #ellipse.type = "convex",
+pca_hembras <- fviz_pca_ind(pca1,
+             #geom.ind = "point", # show points only (nbut not "text")
+             habillage = hem_resu2$especie, # color by groups
+            #palette = "Dark2",
+             addEllipses = TRUE, # Concentration ellipses
+             ellipse.type = "confidence",
             legend.title = "Species",
             title = "",
             pointshape = 19,
             pointsize = 2,
-            #label = "none"
+            label = "none"
 )+
   labs(x = "PC 1 (67.8%)", y = "PC 2 (13.3%)")+
   scale_color_manual(labels = c("CF","CPF", "CAS",
                                 "CPP", "CAA", "CM"),
   values = c("#1B9E77", "#D95F02", "#7570B3", "#E7298A",
              "#66A61E", "#E6AB02"))
-
+pca_hembras
 
 ### PERMANOVA of pistillate flowers
 library(vegan)
@@ -345,16 +345,26 @@ fviz_pca_ind(pca2,
 )+
   labs(x = "PC 1 (53.2%)", y = "PC 2 (21.9%)")
 
-# Agrupado por especie
-fviz_pca_ind(pca1,
+# Clustering by species
+fviz_pca_ind(pca2,
              geom.ind = "point", # show points only (nbut not "text")
-             col.ind = hem_resu2$especie, # color by groups
-             palette = c("#00AFBB", "#E7B800","#FC4E07", "#00AFDB",
-                         "#E7B850", "#FC4E50"),
+             col.ind = machos2$especie, # color by groups
+             #palette = "Dark2",
              addEllipses = TRUE, # Concentration ellipses
-ellipse.type = "confidence",
-             legend.title = "Groups"
-)
+             ellipse.type = "confidence",
+             legend.title = "Species",
+             title = "",
+             pointshape = 19,
+             pointsize = 2,
+             #label = "none"
+)+
+  labs(x = "PC 1 (53.2%)", y = "PC 2 (21.9%)")+
+  scale_color_manual(labels = c("CF","CPF", "CAS",
+                                "CPP", "CAA", "CM"),
+                     values = c("#1B9E77", "#D95F02", "#7570B3", "#E7298A",
+                                "#66A61E", "#E6AB02"))
+
+
 
 ### PERMANOVA de flores macho
 head(machos2)

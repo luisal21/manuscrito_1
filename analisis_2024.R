@@ -429,6 +429,11 @@ boxplot(mac_nec$VN ~ mac_nec$especie)
 volumen = read.csv("nectar_volume.csv", header = T)
 head(volumen)
 str(volumen)
+# Descriptive statistics
+tapply(volumen$VN, list(volumen$especie, volumen$sexo), mean)
+tapply(volumen$VN, list(volumen$especie, volumen$sexo), es)
+tapply(volumen$VN, list(volumen$especie, volumen$sexo), length)
+
 hist(volumen$VN)
 shapiro.test(volumen$VN)
 shapiro.test(log(volumen$VN))

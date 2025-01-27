@@ -68,20 +68,20 @@ media = hem_resu2 %>%
 View(media)
 #write.csv(media, file = "hembras_mean.csv")
 # Standard error
-erro = hembras %>%
+erro = hem_resu2 %>%
   group_by(especie) %>%
   dplyr::summarize(CD = es(CD), TL = es(TL), CL = es(CL), TD1 = es(TD1), 
                    TD2 = es(TD2), TD3 = es(TD3), NDf = es(NDf), SD = es(SD), 
                    PL = es(PL), SL = es(SL), OL = es(OL), OD = es(OD), 
-                   VN = es(vol_nec), n = n())
+                   VN = es(VN), n = n())
 View(erro)
 # Coefficient of variation
-CV = hembras %>%
+CV = hem_resu2 %>%
   group_by(especie) %>%
   dplyr::summarize(CD = cv(CD), TL = cv(TL), CL = cv(CL), TD1 = cv(TD1),
                    TD2 = cv(TD2), TD3 = cv(TD3), NDf = cv(NDf), SD = cv(SD), 
                    PL = cv(PL), SL = cv(SL), OL = cv(OL), OD = cv(OD),
-                   VN = cv(vol_nec), n = n())
+                   VN = cv(VN), n = n())
 View(CV)
 
 #### Principal component analysis (PCA) of pistillate's floral traits ####
@@ -172,6 +172,7 @@ pca_hembras <- fviz_pca_ind(pca1,
             palette = "Dark2",
              addEllipses = TRUE, # Concentration ellipses
              ellipse.type = "confidence",
+            #ellipse.level = 0.95,
             legend.title = "Species",
             title = "",
             pointshape = 19,

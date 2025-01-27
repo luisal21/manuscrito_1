@@ -1622,3 +1622,760 @@ plot(dispersion6, hull=FALSE, ellipse=T) ##sd ellipse
 
 
 
+#### PRODUCCIÓN DE POLEN DE LAS DIFERENTES ESPECIES DE CUCURBITA ####
+contador = read.csv("produccion_polen.csv", header = T)
+head(contador)
+str(contador)
+tapply(contador$polen_total, contador$id_planta, length)
+
+#contador$anoplant <- paste(contador$año, contador$id_planta)
+
+# Agrupando por individuo
+conta = contador %>%
+  group_by(año, condicion, spp, id_planta) %>%
+  dplyr::summarize(total_mean = mean(polen_total), 
+                   es_total = es(polen_total),
+                   n = n())
+conta
+# Estadística descriptiva de la producción de polen
+tapply(conta$total_mean, conta$spp, mean)
+tapply(conta$total_mean, conta$spp, es)
+tapply(conta$total_mean, conta$spp, length)
+#write.csv(conta, file = "produ.csv")
+
+# promedios por especie
+conta2 = conta %>%
+  group_by(spp) %>%
+  dplyr::summarize(total_mean2 = mean(total_mean),
+                   es_total2 = es(total_mean), n = n())
+
+conta2
+
+# boxplot por especie
+boxplot(conta$total_mean ~ conta$spp)
+
+# histograma y prueba de normalidad
+hist(conta$total_mean)
+shapiro.test(conta$total_mean) # no normal
+shapiro.test(sqrt(conta$total_mean))
+shapiro.test(log(conta$total_mean))
+
+# Modelo GLM de producción entre condición
+pro2 = glm(total_mean ~ spp, data = conta, family = gaussian(link = "identity"))
+summary(pro2)
+Anova(pro2)
+shapiro.test(residuals(pro2))
+
+# Estimated marginal means 
+conta_compa <- emmeans(pro2, 
+                       specs = pairwise ~ spp, 
+                       type = "response")
+conta_compa
+conta_compa.m<-conta_compa$emmean 
+conta_compa.m
+model_means_cld_conta <- cld(object = conta_compa.m,
+                             adjust = "sidak",
+                             Letter = letters, 
+                             alpha = 0.05)
+model_means_cld_conta
+
+# Cargando nueva base con la columna de tamaños por individuo
+conta3 = read.csv("produ_tam.csv", header = T)
+head(conta3)
+str(conta3)
+
+# Estadística descriptiva del tamaño del polen
+tapply(conta3$tam, conta3$spp, mean)
+tapply(conta3$tam, conta3$spp, es)
+tapply(conta3$tam, conta3$spp, length)
+# grafico de boxplot del tamaño
+boxplot(conta3$tam ~ conta3$spp)
+
+# Histograma y shapiro test
+hist(conta3$tam)
+shapiro.test(conta3$tam) #no normal
+shapiro.test(log(conta3$tam))
+shapiro.test(sqrt(conta3$tam))
+
+# normalizando datos del tamaño del polen con el paquete bestNormalize
+b1 <- bestNormalize::boxcox(conta3$tam)
+str(b1)
+shapiro.test(b1$x.t)
+
+arcsinh_obj <-arcsinh_x(conta3$tam)
+shapiro.test(arcsinh_obj$x.t)
+
+(BNobject <- bestNormalize(conta3$tam))
+# orderNorm Transformation
+(orderNorm_obj <- orderNorm(conta3$tam))
+str(orderNorm_obj)
+shapiro.test(orderNorm_obj$x.t)
+
+# Análisis de varianza de la producción de polen
+#conta1 = aov(log(total_mean) ~ spp, data = conta3)
+#summary(conta1)
+
+
+# GLM del tamaño del polen
+conta2 = glm(tam ~ condicion, data = conta3, family = gaussian)
+summary(conta2)
+Anova(conta2)
+
+# análisis estadístico del tamaño del polen con una prueba de kruskal-wallis
+kruskal.test(tam ~ spp, data = conta3)
+
+# comparaciones múltiples
+pairwise.wilcox.test(conta3$tam, conta3$spp,
+                     p.adjust.method = "holm")
+
+# Gráfica de la producción de polen
+## function to return median and labels
+#n_fun <- function(x){
+#  return(data.frame(y = median(x) - 10000, 
+#                    label = paste0("n = ",length(x))))
+#}
+head(conta)
+# Gráfica de boxplot de la producción de polen
+produ <- ggplot(conta, aes(x = spp, y = total_mean, fill = condicion)) +
+  geom_boxplot() +
+  ## use either geom_point() or geom_jitter()
+  geom_point(size = 2, alpha = .3, #aes(color = especie)
+             position = position_jitter(seed = 1, width = .1))+
+  #stat_summary(geom = "text", fun.data = n_fun)+
+  labs(x = "Especies", y = "Producción de polen")+
+  scale_x_discrete(labels=c("1CF" = "CF", "2CPF" = "CPF",
+                            "3CPP" = "CPP", "4CAS" = "CAS", "5CAA" = "CAA",
+                            "6CM" = "CM"))+
+  theme_bw()+
+  theme(axis.text = element_text(face = "bold"))+
+  scale_color_discrete(name="Species",
+                       labels = c("CF", "CPF", "CPP", "CAS", "CAA", "CM"))+
+  #annotate("text", x=1, y=2000, label= "n = 26", size = 4)+
+  #annotate("text", x=2, y=2000, label= "n = 6", size = 4)+
+  #annotate("text", x=3, y=2000, label= "n = 28", size = 4)+
+  #annotate("text", x=4, y=2000, label= "n = 39", size = 4)+
+  #annotate("text", x=5, y=2000, label= "n = 32", size = 4)+
+  #annotate("text", x=6, y=2000, label= "n = 31", size = 4)+
+  annotate("text", x=1, y=34000, label= "b", size = 5)+
+  annotate("text", x=2, y=19000, label= "d", size = 5)+
+  annotate("text", x=3, y=21000, label= "d", size = 5)+
+  annotate("text", x=4, y=29000, label= "c", size = 5)+
+  annotate("text", x=5, y=37000, label= "bc", size = 5)+
+  annotate("text", x=6, y=52000, label= "a", size = 5)+
+  annotate("text", x=1, y=50000, label= "", size = 5)
+theme(legend.position = "none")+
+  scale_fill_manual(values = c("#DE7862FF", "#58A449FF"))
+produ
+
+#### TAMAÑO DE POLEN DE LAS DIFENTES ESPECIES ####
+polen = read.csv("tamaño_polen.csv", header = TRUE)
+head(polen)
+str(polen)
+tapply(polen$micras, polen$especie, mean)
+tapply(polen$micras, polen$especie, sd)
+tapply(polen$micras, polen$especie, es)
+tapply(polen$micras, polen$especie, length)
+boxplot(polen$micras ~ polen$especie)
+
+# Histograma del tamaño de polen 
+hist(polen$micras)
+shapiro.test(polen$micras)
+# Análisis de varianza del tamaño de polen entre especies
+mod1_polen = aov(polen$micras ~ polen$especie)
+summary(mod1_polen)
+
+# comparaciones multiples
+compa1 = TukeyHSD(mod1_polen)
+compa1
+Cld = multcompLetters4(mod1_polen, compa1)
+Cld
+#
+#em1 = emmeans(mod1_polen, specs = pairwise ~ especie)
+#em1$emmeans
+#em1$contrasts
+#write.csv(em1$contrasts, file = "emmeans_polen_tamaño.csv")
+
+# Gráfica del tamaño del polen entre especies
+## function to return median and labels
+#n_fun <- function(x){
+#  return(data.frame(y = median(x) - 22, 
+#                    label = paste0("n = ",length(x))))
+#}
+# Plot
+size <- ggplot(conta3, aes(x = spp, y = tam, fill = condicion)) +
+  geom_boxplot() +
+  ## use either geom_point() or geom_jitter()
+  geom_point(size = 2, alpha = .3, #
+             position = position_jitter(seed = 1, width = .1))+
+  #stat_summary(geom = "text", fun.data = n_fun)+
+  #coord_flip()+
+  labs(x = "Especies", y = "Tamaño del polen (μm)")+
+  scale_x_discrete(labels=c("1CF" = "CF", "2CPF" = "CPF",
+                            "3CPP" = "CPP", "4CAS" = "CAS", "5CAA" = "CAA",
+                            "6CM" = "CM"))+
+  theme_bw()+
+  theme(axis.text = element_text(face = "bold"))+
+  scale_color_discrete(name="Species",
+                       labels = c("CF", "CPF", "CPP", "CAS", "CAA", "CM"))+
+  #annotate("text", x=1, y=115, label= "n = 100", size = 4)+
+  #annotate("text", x=2, y=115, label= "n = 100", size = 4)+
+  #annotate("text", x=3, y=115, label= "n = 100", size = 4)+
+  #annotate("text", x=4, y=115, label= "n = 100", size = 4)+
+  #annotate("text", x=5, y=115, label= "n = 100", size = 4)+
+  #annotate("text", x=6, y=115, label= "n = 100", size = 4)+
+  annotate("text", x=1, y=155.5, label= "a", size = 5)+
+  annotate("text", x=2, y=142.5, label= "c", size = 5)+
+  annotate("text", x=3, y=145, label= "bc", size = 5)+
+  annotate("text", x=4, y=147.5, label= "b", size = 5)+
+  annotate("text", x=5, y=145, label= "bc", size = 5)+
+  annotate("text", x=6, y=146, label= "bc", size = 5)+
+  scale_fill_manual(values = c("#DE7862FF", "#58A449FF"))+
+  theme(legend.position = "none")
+size  
+#labels = c("Cucurbita foetidissima (CF)",
+#           "Cucurbita pepo subsp. fraterna (CPF)",
+#           "Cucurbita pepo subsp. pepo (CPP)",
+#           "Cucurbita argyrosperma subsp. sororia (CAS)",
+#           "Cucurbita argyrosperma subsp. argyrosperma (CAA)",
+#           "Cucurbita moschata (CM)"),
+#guide = guide_legend(nrow = 5, 
+#                     label.theme = element_text(face = "italic")))
+
+#### CONCENTRACIÓN DE PROTEINAS ####
+proteinas = read.csv("concen_protein.csv", header = T)
+head(proteinas)
+str(proteinas)
+tapply(proteinas$prot, proteinas$Especie, length)
+#proteinas$anoplant  <- paste(proteinas$año, proteinas$PlantID)
+
+# Agrupando por individuos
+conce_prot = proteinas %>%
+  group_by(año, Especie, PlantID, Estatus) %>%
+  dplyr::summarize(total_conc = mean(prot), es_total = es(prot), n = n())
+#write.csv(conce_prot, file ="conce_prot.csv")
+
+tapply(conce_prot$total_conc, conce_prot$Especie, mean)
+tapply(conce_prot$total_conc, conce_prot$Especie, es)
+tapply(conce_prot$total_conc, conce_prot$Especie, length)
+
+tapply(conce_lipi$total_conc, conce_lipi$Estatus, mean)
+tapply(conce_lipi$total_conc, conce_lipi$Estatus, es)
+tapply(conce_lipi$total_conc, conce_lipi$Estatus, length)
+
+boxplot(conce_prot$total_conc ~ conce_prot$Especie)
+boxplot(conce_prot$total_conc ~ conce_prot$Estatus)
+shapiro.test(conce_prot$total_conc)
+hist(conce_prot$total_conc)
+
+# GLM de proteinas modelo bueno
+modpro = glm(total_conc ~ Especie, data = conce_prot, family = gaussian)
+summary(modpro)
+Anova(modpro)
+shapiro.test(residuals(modpro))
+
+
+modpro1 = aov(total_conc ~ Estatus, data = conce_prot)
+summary(modpro1)
+
+#mod_prot = glm(prot ~ Especie, data = proteinas, family = "Gamma")
+#summary(mod_prot)
+#Anova(mod_prot)
+# comparaciones multiples
+#em_prot = emmeans(modpro1, specs = pairwise ~ Especie)
+#em_prot$emmeans
+#em_prot$contrasts
+
+#mod_prot2 = glmer(prot ~ Especie + (1|PlantID), nAGQ = 0, data = proteinas,
+#                  family = Gamma)
+#summary(mod_prot2)
+#Anova(mod_prot2)
+# comparaciones multiples
+
+# Plot
+prot <- ggplot(conce_prot, aes(x = Especie, y = total_conc, fill = Estatus)) +
+  geom_boxplot() +
+  ## use either geom_point() or geom_jitter()
+  geom_point(size = 2, alpha = .5, #
+             position = position_jitter(seed = 1, width = .1))+
+  #stat_summary(geom = "text", fun.data = n_fun)+
+  #coord_flip()+
+  labs(x = "Especies", y = "Concentración de proteínas (µg/mg)")+
+  scale_x_discrete(labels=c("1CF" = "CF", "2CPF" = "CPF",
+                            "3CPP" = "CPP", "4CAS" = "CAS", "5CAA" = "CAA",
+                            "6CM" = "CM"))+
+  theme_bw()+
+  theme(axis.text = element_text(face = "bold"))+
+  scale_color_discrete(name="Species",
+                       labels = c("CF", "CPF", "CPP", "CAS", "CAA", "CM"))+
+  #annotate("text", x=1, y=60, label= "n = 26", size = 4)+
+  #annotate("text", x=2, y=60, label= "n = 21", size = 4)+
+  #annotate("text", x=3, y=60, label= "n = 16", size = 4)+
+  #annotate("text", x=4, y=60, label= "n = 33", size = 4)+
+  #annotate("text", x=5, y=60, label= "n = 33", size = 4)+
+  #annotate("text", x=6, y=60, label= "n = 43", size = 4)+
+  theme(legend.position = "none")+
+  scale_fill_manual(values = c("#DE7862FF", "#58A449FF"))
+prot
+
+#### CONCENTRACIÓN DE LIPIDOS EN EL POLEN ####
+lipi = read.csv("lipidos.csv", header = T)
+head(lipi)
+str(lipi)
+
+# Agrupando por individuos
+#lipi$anoplant = paste(lipi$año, lipi$PlantID)
+
+# Agrupando por especie
+conce_lipi = lipi %>%
+  group_by(año, Especie, PlantID, Estatus) %>%
+  dplyr::summarize(total_conc = mean(lipidos), es_total = es(lipidos), n = n())
+conce_lipi
+#write.csv(conce_lipi, file = "conce_lipi.csv")
+
+# EStadistica descriptiva
+tapply(conce_lipi$total_conc, conce_lipi$Especie, mean)
+tapply(conce_lipi$total_conc, conce_lipi$Especie, es)
+tapply(conce_lipi$total_conc, conce_lipi$Especie, length)
+
+
+boxplot(conce_lipi$total_conc ~ conce_lipi$Especie)
+shapiro.test(conce_lipi$total_conc)
+hist(conce_lipi$total_conc)
+
+# modelo
+m1 = glm(total_conc ~ Especie, data = conce_lipi, family = gaussian)
+summary(m1)
+Anova(m1)
+shapiro.test(residuals(m1))
+# Estimated marginal means 
+lip_compa <- emmeans(m1, 
+                     specs = pairwise ~ Especie, 
+                     type = "response")
+lip_compa
+lip_compa.m<-lip_compa$emmean 
+lip_compa.m
+model_means_cld_lip <- cld(object = lip_compa.m,
+                           adjust = "sidak",
+                           Letter = letters, 
+                           alpha = 0.05)
+model_means_cld_lip
+
+
+
+
+
+
+m1 = aov(total_conc ~ Estatus, data = conce_lipi)
+compa6 = TukeyHSD(m1)
+compa6
+Cld3 = multcompLetters4(m1, compa6)
+Cld3
+
+# modelo estadistico
+mod_lip = glm(total_conc ~ Especie, data = conce_lipi, family = "gaussian")
+#summary(mod_lip)
+#Anova(mod_lip)
+# comparaciones multiples
+em_lip = emmeans(m1, specs = pairwise ~ Especie)
+em_lip$emmeans
+em_lip$contrasts
+
+
+#library(lme4)
+#mod_lip2 = glmer(lipidos ~ Especie + (1|PlantID), data = lipi,
+#                  family = "gaussian")
+#summary(mod_lip2)
+#Anova(mod_lip2)
+# comparaciones multiples
+#em_prot2 = emmeans(mod_prot2, specs = pairwise ~ Especie)
+
+# Plot
+lipid <- conce_lipi %>%
+  ggplot(aes(x = Especie, y = total_conc, fill = Estatus)) +
+  geom_boxplot() +
+  ## use either geom_point() or geom_jitter()
+  geom_point(size = 2, alpha = .5, #
+             position = position_jitter(seed = 1, width = .1))+
+  #stat_summary(geom = "text", fun.data = n_fun)+
+  #coord_flip()+
+  labs(x = "Especies", y = "Concentración de lípidos (µg/mg)")+
+  scale_x_discrete(labels=c("1CF" = "CF", "2CPF" = "CPF",
+                            "3CPP" = "CPP", "4CAS" = "CAS", "5CAA" = "CAA",
+                            "6CM" = "CM"))+
+  theme_bw()+
+  theme(axis.text = element_text(face = "bold"))+
+  scale_color_discrete(name="Species")+
+  annotate("text", x=1, y=172, label= "ab", size = 5)+
+  annotate("text", x=2, y=176, label= "ab", size = 5)+
+  annotate("text", x=3, y=151, label= "b", size = 5)+
+  annotate("text", x=4, y=155, label= "b", size = 5)+
+  annotate("text", x=5, y=140, label= "b", size = 5)+
+  annotate("text", x=6, y=189, label= "a", size = 5)+
+  #annotate("text", x=1, y=58, label= "n = 24", size = 4)+
+  #annotate("text", x=2, y=58, label= "n = 21", size = 4)+
+  #annotate("text", x=3, y=58, label= "n = 16", size = 4)+
+  #annotate("text", x=4, y=58, label= "n = 34", size = 4)+
+  #annotate("text", x=5, y=58, label= "n = 32", size = 4)+
+  #annotate("text", x=6, y=58, label= "n = 41", size = 4)+
+  theme(legend.position = "none")+
+  scale_fill_manual(values = c("#DE7862FF", "#58A449FF"))
+lipid  
+
+
+#### relación proteinas lipidos P:L ####
+pl = read.csv("PL.csv", header = T)  
+head(pl)  
+str(pl)
+
+# Agrupando por individuo
+pl_res = pl %>%
+  group_by(año, Especie, PlantID, Estatus) %>%
+  dplyr::summarize(total_pl = mean(pl), es_pl = es(pl), n = n())
+pl_res
+
+tapply(pl_res$total_pl, pl_res$Especie, mean)
+tapply(pl_res$total_pl, pl_res$Especie, es)
+tapply(pl_res$total_pl, pl_res$Especie, length)
+#write.csv(pl_res, file = "pl.csv")
+# Agrupando por especie
+pl_res2 = pl_res %>%
+  group_by(Especie) %>%
+  dplyr::summarize(total_pl2 = mean(total_pl), 
+                   es_pl2 = es(total_pl), n = n())
+pl_res2
+View(pl_res2)
+
+#
+boxplot(pl_res$total_pl ~ pl_res$Especie)
+#boxplot(pl_res$total_pl ~ pl_res$Estatus)
+shapiro.test(pl_res$total_pl)
+hist(pl_res$total_pl)
+# GLM
+modpl = glm(total_pl ~ Especie, data = pl_res, family = gaussian)
+summary(modpl)
+Anova(modpl)
+# ANOVA
+modpl = aov(total_pl ~ Estatus, data = pl_res)
+summary(modpl)
+
+## grafica de boxplot
+# Plot
+prot_lip <- ggplot(aes(x = Especie, y = total_pl, fill = Estatus),
+                   data = pl_res) +
+  geom_boxplot() +
+  ## use either geom_point() or geom_jitter()
+  geom_point(size = 2, alpha = .5, #
+             position = position_jitter(seed = 1, width = .1))+
+  #stat_summary(geom = "text", fun.data = n_fun)+
+  #coord_flip()+
+  labs(x = "Especies", y = "P : L")+
+  scale_x_discrete(labels=c("1CF" = "CF", "2CPF" = "CPF",
+                            "3CPP" = "CPP", "4CAS" = "CAS", "5CAA" = "CAA",
+                            "6CM" = "CM"))+
+  theme_bw()+
+  theme(axis.text = element_text(face = "bold"))+
+  scale_color_discrete(name="Species",
+                       labels = c("CF", "CPF", "CPP", "CAS", "CAA", "CM"))+
+  #annotate("text", x=1, y=187, label= "a", size = 5)+
+  #annotate("text", x=2, y=208, label= "a", size = 5)+
+  #annotate("text", x=3, y=165, label= "a", size = 5)+
+  #annotate("text", x=4, y=182, label= "a", size = 5)+
+  #annotate("text", x=5, y=165, label= "a", size = 5)+
+  #annotate("text", x=6, y=210, label= "a", size = 5)+
+  #annotate("text", x=1, y=0.4, label= "n = 24", size = 4)+
+  #annotate("text", x=2, y=0.4, label= "n = 20", size = 4)+
+  #annotate("text", x=3, y=0.4, label= "n = 13", size = 4)+
+  #annotate("text", x=4, y=0.4, label= "n = 33", size = 4)+
+  #annotate("text", x=5, y=0.4, label= "n = 32", size = 4)+
+#annotate("text", x=6, y=0.4, label= "n = 41", size = 4)+
+theme(legend.position = "none")+
+  scale_fill_manual(values = c("#DE7862FF", "#58A449FF"))
+prot_lip
+
+# grafica de puntos
+ggplot(pl, aes(x = prot, y = lipidos, color = Especie))+
+  geom_point()#+
+#  geom_smooth(method="lm", se=FALSE)
+
+
+# haciendo panel de las dos gráficas
+library(ggpubr)
+# juntado grafica de proteinas, lipidos y P:L
+ggarrange(produ, size, prot, lipid, prot_lip, 
+          labels = c("A", "B", "C", "D", "E"),
+          ncol =3, nrow = 2)
+
+# cargando paqueteria gridExtra
+library(gridExtra)
+library(cowplot)
+gt <- grid.arrange(produ, size, 
+                   prot, lipid, prot_lip,
+                   ncol = 6, nrow = 2, 
+                   layout_matrix = rbind(c(1,1,1,2,2,2),
+                                         c(3,3,4,4,5,5)))
+# Add labels to the arranged plots
+p <- as_ggplot(gt) +                                # transform to a ggplot
+  draw_plot_label(label = c("A", "B", "C", "D", "E"), size = 15,
+                  x = c(0,0.5,0,0.333,0.666), y = c(1,1,0.5,0.5,0.5))#Add labels
+p
+
+
+
+##### Rasgos del polen ####
+setwd("/home/luis/Documents/3_Doctorado_UNAM/a-proyecto/analisis_florales_tesis_2022/rasgos_polen")
+# producción de polen
+produccion = read.csv("produ.csv", header = T)
+tamaño = read.csv("produ_tam.csv", header = T) #ya tiene la variable
+proteinas = read.csv("conce_prot.csv", header = T)
+lipidos = read.csv("conce_lipi.csv", header = T)
+pl = read.csv("pl.csv", header = T)
+
+# Agrupando por individuos
+produccion$anoplant = paste(produccion$año, produccion$id_planta)
+proteinas$anoplant = paste(proteinas$año, proteinas$PlantID)
+lipidos$anoplant = paste(lipidos$año, lipidos$PlantID)
+pl$anoplant = paste(pl$año, pl$PlantID)
+
+# Uniendo tablas
+joined_tibble <- full_join(produccion, tamaño,
+                           by = join_by(anoplant == anoplant))
+joined_tibble2 <- full_join(joined_tibble, proteinas,
+                            by = join_by(anoplant == anoplant))
+joined_tibble3 <- full_join(joined_tibble2, lipidos,
+                            by = join_by(anoplant == anoplant))
+joined_tibble4 <- full_join(joined_tibble3, pl,
+                            by = join_by(anoplant == anoplant))
+# Exportar tabla a csv
+write.csv(joined_tibble4, file = "rasgos_pollen.csv")
+
+### análisis multivariado con todos los rasgos evaluados del polen
+library(vegan)
+
+# cargando base depurada de todos los rasgos de polen
+pollen = read.csv("rasgos_pollen2.csv", header = T)
+head(pollen)
+str(pollen)
+
+tapply(pollen$produ, pollen$spp, mean)
+tapply(pollen$tam, pollen$spp, mean)
+tapply(pollen$conc.prot, pollen$spp, mean)
+tapply(pollen$conc_lip, pollen$spp, mean)
+tapply(pollen$pl, pollen$spp, mean)
+
+
+pollen2 = pollen[,6:10]
+head(pollen2)
+
+# Normalidad multivariada
+library(MVN)
+# test de normalidad
+# test de Mardia en MVN
+result <- mvn(data = pollen2, mvnTest = "mardia")
+result$multivariateNormality
+# Henze-Zirkler's MVN test
+result <- mvn(data = pollen2, mvnTest = "hz")
+result$multivariateNormality
+# Royston's MVN test
+result <- mvn(data = pollen2, mvnTest = "royston")
+result$multivariateNormality
+# Doornik-Hansen's MVN test
+result <- mvn(data = pollen2, mvnTest = "dh")
+result$multivariateNormality
+# Energy test
+result <- mvn(data = pollen2, mvnTest = "energy")
+result$multivariateNormality
+
+
+# PCA de caracteres del nectar
+head(pollen)
+str(pollen)
+pairs(pollen[6:10])
+pca3 <- prcomp(pollen[, 6:10], scale = T)
+summary(pca3)
+pca3$rotation[, 1:2]
+plot(pca3)
+str(pca3)
+#write.csv(pca1$rotation[, 1:2], file = "pca_hembras.csv")
+biplot(pca3, scale=0)
+
+# cargando paquete factoextra
+library(factoextra)
+# Top 10 variables que más contribuyen a PC1
+fviz_contrib(pca3, choice = "var", axes = 1, top = 10)
+fviz_contrib(pca3, choice = "var", axes = 2, top = 10)
+# plot
+fviz_pca_biplot(pca3, geom.ind = "point",
+                axes = c(1,2), pointsize = 2, title = "", geom.var = c("",""),
+)
+
+# Variables
+fviz_pca_var(pca3, col.var = "cos2",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
+             repel = TRUE # Avoid text overlapping
+)
+# Contribución
+fviz_pca_var(pca3, col.var = "contrib",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07")
+)
+
+### Graph of individuals (rows)
+ind = get_pca_ind(pca3)
+ind
+
+fviz_pca_ind(pca3)
+fviz_pca_ind(pca3, col.ind = "cos2", 
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             repel = TRUE # Avoid text overlapping (slow if many points)
+)
+
+fviz_pca_ind(pca3, pointsize = "cos2", 
+             pointshape = 21, fill = "#E7B800",
+             repel = TRUE # Avoid text overlapping (slow if many points)
+)
+
+# Total contribution on PC1 and PC2
+fviz_contrib(pca3, choice = "ind", axes = 1:2)
+
+# Agrupado por condición
+fviz_pca_ind(pca3,
+             geom.ind = "point", # show points only (nbut not "text")
+             col.ind = pollen$condicion, # color by groups
+             palette = c("#00AFBB", "#E7B800"),
+             addEllipses = TRUE, # Concentration ellipses
+             #ellipse.type = "euclid",
+             legend.title = "Groups"
+)
+
+# Agrupado por especie
+fviz_pca_ind(pca3,
+             geom.ind = "point", # show points only (nbut not "text")
+             col.ind = pollen$spp, # color by groups
+             palette = c("#00AFBB", "#E7B800","#FC4E07", "#00AFDB",
+                         "#E7B850", "#FC4E50"),
+             addEllipses = TRUE, # Concentration ellipses
+             #ellipse.type = "confidence",
+             legend.title = "Groups"
+)
+
+### agrupado por condición + las variables
+fviz_pca_biplot(pca3,
+                col.ind = pollen$condicion, palette = "jco",
+                addEllipses = TRUE, label = "var",
+                col.var = "black", repel = TRUE,
+                legend.title = "Condition"
+)
+
+### agrupado por especies + las variables
+fviz_pca_biplot(pca1,
+                col.ind = hem_resu2$especies,
+                addEllipses = TRUE, label = "var",
+                col.var = "black", repel = TRUE,
+                legend.title = "Species"
+)
+
+
+
+# cargando paquete para graficar PCA
+library(ggfortify)
+autoplot(pca3)
+pca_hem = autoplot(pca3, data = pollen, colour = "condicion", size = 2)+
+  xlab("PC 1 (36.1%)") +
+  ylab("PC 2 (31.35%)") +
+  scale_color_discrete(name = "Condition",
+                       labels = c("Domesticated", "Wild"))+
+  theme_bw()
+pca_hem
+
+
+set.seed(0)#Para que los resultados no se brinden aleatorios
+nmds1 <- metaMDS(pollen[,6:10])
+plot(nmds1)
+plot(nmds1, type = "t")
+stressplot(nmds1)
+
+coordenadas <- as.data.frame(scores(nmds1)$sites)
+coordenadas
+
+#Le añadimos a las coordenadas una columna con los tramos:
+coordenadas$spp = pollen$spp
+coordenadas$condicion = pollen$condicion
+head(coordenadas)
+# plot
+gr2 <- ggplot(coordenadas, aes(x = NMDS1, y = NMDS2))+ 
+  geom_point(size = 4, aes(colour = spp))+
+  theme_bw()+
+  scale_color_discrete(name = "Species", 
+                       labels =c("CF","CPF","CPP","CAS","CAA","CM") );gr2
+
+#+geom_text(hjust=0.5, vjust=1.5, label=datos$sample)
+gr3 <- ggplot(coordenadas, aes(x = NMDS1, y = NMDS2))+ 
+  geom_point(size = 4, aes(colour = condicion))+
+  theme_bw()+
+  scale_color_discrete(name = "condicion", 
+                       labels =c("Domesticada","Silvestre") );gr3
+#gr4 <- ggplot(coordenadas, aes(x = NMDS1, y = NMDS2))+ 
+#  geom_point(size = 4, aes( shape = sexo_flor, colour = spp)); gr4
+# haciendo panel de las dos gráficas
+
+# PCoA
+pol_dist2 = dist(pollen[,c(6:10)])
+pol_PCoA <- wcmdscale(d = pol_dist2, eig = TRUE)
+pol_PCoA
+pol_PCoA$points
+# gráfica del PCoA
+ggplot(data = data.frame(pol_PCoA$points),
+       aes(x = Dim1, y = Dim2)) +
+  geom_point() +
+  theme_bw()
+#
+pcoa <- cmdscale(pol_dist2, eig = TRUE, add = TRUE)
+#convert pcoa results into data frame that can be plotted
+pcoa_df <- data.frame(pcoa$points)
+colnames(pcoa_df) <- c("PCo1", "PCo2")
+pcoa_df$Species <- factor(pollen$spp) #add group of interest,
+# mine was Morphospecies in the data frame cal_fem_data2
+calf <- ggplot(pcoa_df, aes(x = PCo1, y = PCo2, color = Species)) + 
+  geom_point(size = 2) +
+  xlab("PCo1") +
+  ylab("PCo2") + 
+  ggtitle("Flores macho") +
+  theme_classic()
+calf
+#
+pcoa1 <- cmdscale(pol_dist2, eig = TRUE, add = TRUE)
+#convert pcoa results into data frame that can be plotted
+pcoa1_df <- data.frame(pcoa1$points)
+colnames(pcoa1_df) <- c("PCo1", "PCo2")
+pcoa1_df$condicion <- factor(pollen$condicion) #add group of interest,
+# mine was Morphospecies in the data frame cal_fem_data2
+calf <- ggplot(pcoa1_df, aes(x = PCo1, y = PCo2, color = condicion)) + 
+  geom_point(size = 2) +
+  xlab("PCo1") +
+  ylab("PCo2") + 
+  #ggtitle("Flores macho por condición") +
+  theme_classic()+
+  scale_color_discrete(name = "Condition", labels = c("Domesticated", "Wild"))
+calf
+
+# PERMANOVA
+library(vegan)
+head(pollen)
+str(pollen)
+dune8 = pollen[6:10]
+# Calculando distancia euclidiana
+dune.dist5 <- vegdist(dune5, method="euclidean")
+
+set.seed(0)
+# calculando PERMANOVA por condición
+dune.div8 <- adonis2(dune8 ~ condicion, data = pollen,
+                     permutations = 999, method="euclidean")
+dune.div8
+
+# calculando PERMANOVA por especie
+dune.div9 <- adonis2(dune8 ~ condicion+spp, data = pollen,
+                     permutations = 999, method="euclidean")
+dune.div9
+
+
+
+

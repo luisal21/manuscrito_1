@@ -176,7 +176,7 @@ pca_hembras <- fviz_pca_ind(pca1,
             legend.title = "Species",
             title = "",
             pointshape = 19,
-            pointsize = 2,
+            pointsize = 1.5,
             label = "none"
 )+
   labs(x = "PC 1 (67.8%)", y = "PC 2 (13.3%)")
@@ -237,21 +237,23 @@ machos3 = machos2 %>%
             TD2 = mean(TD2), TD3 = mean(TD3), NDm = mean(NDm), AD = mean(AD),
             StL = mean(StL), AL = mean(AL), VN = mean(VN), n = n())
 # exporting mean by floral trait
-write.csv(machos3, file = "machos_mean.csv")
+#write.csv(machos3, file = "machos_mean.csv")
+View(machos3)
+
 
 # Standard error
-machos %>%
+erro_m = machos2 %>%
   group_by(especie) %>%
   summarise(CD = es(CD), TL = es(TL), CL = es(CL), TD1 = es(TD1), 
             TD2 = es(TD2), TD3 = es(TD3), NDm = es(NDm), AD = es(AD), 
-            StL = es(StL), AL = es(AL), VN = es(vol_nec), n = n())
-
+            StL = es(StL), AL = es(AL), VN = es(VN), n = n())
+View(erro_m)
 # Coefficient of variance
-machos %>%
+cv_m = machos2 %>%
   group_by(especie) %>%
   summarise(CD = cv(CD), TL = cv(TL), CL = cv(CL), TD1 = cv(TD1),
             TD2 = cv(TD2), TD3 = cv(TD3), NDm = cv(NDm), AD = cv(AD), 
-            StL = cv(StL), AL = cv(AL), VN = cv(vol_nec), n = n())
+            StL = cv(StL), AL = cv(AL), VN = cv(VN), n = n())
 
 #### Principal component analysis (PCA) of staminate floral traits ####
 head(machos2)
@@ -335,7 +337,7 @@ pca_machos <-
              legend.title = "Species",
              title = "",
              pointshape = 19,
-             pointsize = 2,
+             pointsize = 1.5,
              #label = "none"
 )+
   labs(x = "PC 1 (53.2%)", y = "PC 2 (21.9%)")
@@ -356,8 +358,8 @@ gt <- ggarrange(pca_hembras, pca_machos,
                 labels="AUTO")
 gt
 # Exporting plot
-ggsave("nectar.jpg", device = "jpg", width = 23, height = 23,
-       units = "cm", dpi = 300)
+ggsave("Figure_1.png", device = "png", width = 172, height = 172,
+       units = "mm", dpi = 600, bg = "white")
 
 
 ### PERMANOVA of staminate flowers

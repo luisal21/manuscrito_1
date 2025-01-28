@@ -3082,6 +3082,13 @@ hist(conta$total_mean)
 shapiro.test(conta$total_mean) # no normal
 shapiro.test(sqrt(conta$total_mean))
 shapiro.test(log(conta$total_mean))
+# histrogram and normality test
+hist(conta$total_mean)
+hist(log(conta$total_mean))
+shapiro.test(conta$total_mean) # no normal distribution
+shapiro.test(log(conta$total_mean)) # normal distribution
+bartlett.test(conta$total_mean, conta$spp)
+bartlett.test(log(conta$total_mean), conta$spp)
 
 # Modelo GLM de producción entre condición
 pro2 = glm(total_mean ~ spp, data = conta, family = gaussian(link = "identity"))

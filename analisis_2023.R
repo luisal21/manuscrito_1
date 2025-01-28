@@ -2016,6 +2016,9 @@ compa_azu$contrasts
 compa_azu2 = emmeans(mod_azu1, specs = pairwise ~ spp|azucares)
 compa_azu2$contrasts
 
+
+
+
 #### AMINOACIDOS DEL NECTAR FLORAL DE CUCURBITA ####
 amino = read.csv("concentraciones_aminoacidos.csv", header = TRUE)
 str(amino)

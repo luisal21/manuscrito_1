@@ -391,44 +391,8 @@ permutest(dispersion6)
 plot(dispersion6, hull=FALSE, ellipse=T) ##sd ellipse
 
 
-#### VOLUMEN DE NECTAR ####
-# Volumen de néctar de flores hembra
-vol_nec2 = subset(hembras, vol_nec != 0)
-vol_nec3 = subset(vol_nec2, vol_nec < 300)
-sort(vol_nec3$vol_nec)
-boxplot(vol_nec3$vol_nec ~ vol_nec3$especie)
-tapply(vol_nec3$vol_nec, vol_nec3$especie, mean)
-tapply(vol_nec3$vol_nec, vol_nec3$especie, es)
-str(vol_nec3)
-
-# Agrupando el volumen de nectar por individuo
-hem_nec <- vol_nec3 %>%
-  group_by(año,condición,especie,id_planta2) %>%
-  dplyr::summarize(VN = mean(vol_nec), n = n()); hem_nec
-
-
-# Volumen de néctar de flores macho
-machos2 <- subset(machos, vol_nec != 0)
-machos3 <- subset(machos2, vol_nec < 150)
-str(machos3)
-sort(machos3$vol_nec)
-# Agrupando volumen de néctar por individuo
-mac_nec <- machos3 %>%
-  group_by(año,condicion,especie,id_planta2) %>%
-  dplyr::summarize(VN = mean(vol_nec), n = n()); mac_nec
-# obteniendo media, error standard y numero de individuos por condicion
-tapply(mac_nec$VN, mac_nec$condicion, mean)
-tapply(mac_nec$VN, mac_nec$condicion, es)
-tapply(mac_nec$VN, mac_nec$condicion, length)
-boxplot(mac_nec$VN ~ mac_nec$especie)
-
-### Uniendo base de hembras y machos
-#str(hem_nec)
-#str(mac_nec)
-#write.csv(hem_nec, file = "nectar_female.csv")
-#write.csv(mac_nec, file = "nectar_male.csv")
-
-# Cargando base conjunta de volumen de nectar 
+#### Nectar volume ####
+# Loading nectar volume combined database
 volumen = read.csv("nectar_volume.csv", header = T)
 head(volumen)
 str(volumen)
@@ -437,10 +401,6 @@ tapply(volumen$VN, list(volumen$especie, volumen$sexo), mean)
 tapply(volumen$VN, list(volumen$especie, volumen$sexo), es)
 tapply(volumen$VN, list(volumen$especie, volumen$sexo), length)
 
-hist(volumen$VN)
-shapiro.test(volumen$VN)
-shapiro.test(log(volumen$VN))
-hist(log(volumen$VN))
 
 # GLM of nectar volume by species and floral sex
 volu = glm(log(VN) ~ especie*sexo, data = volumen, family = gaussian)
@@ -469,826 +429,138 @@ shapiro.test(residuals(volu2))
 plot(residuals(volu2))
 
 
-#### PCA con los caracteres del néctar ####
-# Caracteres del nectar floral (volumen, azucares y aminoacidos) de flores
-# hembra y macho
-nectar = read.csv("traits_nectar.csv", header = T)
-head(nectar)
-str(nectar)
-tapply(nectar$fructose, nectar$sexo, length)
-# Separando machos y hembras
-# flores hembra
-nectar_h = subset(nectar, sexo =="h")
-str(nectar_h)
-# flores macho
-nectar_m = subset(nectar, sexo =="m")
-str(nectar_m)
+#### Nectar sugar concentrations ####
+azucares = read.csv("azucares_2022.csv", header = T)
+head(azucares)
+str(azucares)
+
+# Extrayendo los valores de morelia
+azucares_more = subset(azucares, sitio == "morelia")
+str(azucares_more)
+head(azucares_more)
+tapply(azucares_more$Suma.total, list(azucares_more$spp,
+                                      azucares_more$sexo), length)
+# eliminar los 2 datos de CF de flores macho
+azucares_more2 = subset(azucares_more, spp != "1CF")
+str(azucares_more2)
+tapply(azucares_more2$Suma.total, list(azucares_more2$spp,
+                                       azucares_more2$sexo), length)
+
+# Descriptive statistics of total sugar concentration
+tapply(azucares_more2$Suma.total, list(azucares_more2$spp,
+                                       azucares_more2$sexo), mean)
+tapply(azucares_more2$Suma.total, list(azucares_more2$spp,
+                                       azucares_more2$sexo), es)
+
+# Descriptive statistics of fructose concentration
+tapply(azucares_more2$fructosa, list(azucares_more2$spp,
+                                     azucares_more2$sexo), mean)
+tapply(azucares_more2$fructosa, list(azucares_more2$spp,
+                                     azucares_more2$sexo), es)
+
+# Descriptive statistics of glucose concentration
+tapply(azucares_more2$glucosa, list(azucares_more2$spp,
+                                    azucares_more2$sexo), mean)
+tapply(azucares_more2$glucosa, list(azucares_more2$spp,
+                                    azucares_more2$sexo), es)
+
+# Descriptive statistics of sucrose concentration
+tapply(azucares_more2$sacarosa, list(azucares_more2$spp,
+                                     azucares_more2$sexo), mean)
+tapply(azucares_more2$glucosa, list(azucares_more2$spp,
+                                    azucares_more2$sexo), es)
+
+# Separando flores hembra
+# histogramas de cada azucar
+hist(azucares_more2$fructosa)
+hist(azucares_more2$glucosa)
+hist(azucares_more2$sacarosa)
+hist(azucares_more2$Suma.total)
+# prueba de normalidad
+shapiro.test(azucares_more2$fructosa) # no normal
+shapiro.test(azucares_more2$glucosa) # no normal
+shapiro.test(azucares_more2$sacarosa)
+shapiro.test(azucares_more2$Suma.total)
+# modelado de distribucion
+boxplot(azucares_more2$fructosa ~ azucares_more2$spp)#azucares_more2$sexo + 
+boxplot(azucares_more2$glucosa ~ azucares_more2$spp)
+boxplot(azucares_more2$sacarosa ~ azucares_more2$spp)
+boxplot(azucares_more2$Suma.total ~ azucares_more2$spp)
+
+# glm of fructose
+hem_fruc = glm(fructosa ~ spp*sexo, data = azucares_more2, family = Gamma)
+summary(hem_fruc)
+Anova(hem_fruc)
+shapiro.test(residuals(hem_fruc))
+# comparaciones multiples
+fru_compa <- emmeans(hem_fruc, 
+                     specs = pairwise ~ spp | sexo, 
+                     type = "response")
+fru_compa
+fru_compa.m<-fru_compa$emmean 
+fru_compa.m
+model_means_cld_fru <- cld(object = fru_compa.m,
+                           adjust = "sidak",
+                           Letter = letters, 
+                           alpha = 0.05)
+model_means_cld_fru
+
+# glm of glucose
+hem_glu = glm(glucosa ~ spp*sexo, data = azucares_more2, family = Gamma)
+summary(hem_glu)
+Anova(hem_glu)
+shapiro.test(residuals(hem_glu))
+# comparaciones multiples
+glu_compa <- emmeans(hem_glu, 
+                     specs = pairwise ~ spp | sexo, 
+                     type = "response")
+glu_compa
+glu_compa.m<-glu_compa$emmean 
+glu_compa.m
+model_means_cld_glu <- cld(object = glu_compa.m,
+                           adjust = "sidak",
+                           Letter = letters, 
+                           alpha = 0.05)
+model_means_cld_glu
+
+### glm de SACAROSA
+hem_sac = glm(sacarosa ~ spp*sexo, data = azucares_more2, family = gaussian)
+summary(hem_sac)
+Anova(hem_sac)
+shapiro.test(residuals(hem_sac))
+plot(residuals(hem_sac))
+# comparaciones multiples
+sac_compa <- emmeans(hem_sac, 
+                     specs = pairwise ~ spp | sexo, 
+                     type = "response")
+sac_compa
+sac_compa.m<-sac_compa$emmean 
+sac_compa.m
+model_means_cld_sac <- cld(object = sac_compa.m,
+                           adjust = "sidak",
+                           Letter = letters, 
+                           alpha = 0.05)
+model_means_cld_sac
+
+### glm de AZUCAR TOTAL
+hem_total = glm(Suma.total ~ spp*sexo, data = azucares_more2, family = gaussian)
+summary(hem_total)
+Anova(hem_total)
+shapiro.test(residuals(hem_total))
+plot(residuals(hem_total))
+# comparaciones multiples
+total_compa <- emmeans(hem_total, 
+                       specs = pairwise ~ spp | sexo, 
+                       type = "response")
+total_compa
+total_compa.m<-total_compa$emmean 
+total_compa.m
+model_means_cld_total <- cld(object = total_compa.m,
+                             adjust = "tukey",
+                             Letter = letters, 
+                             alpha = 0.05)
+model_means_cld_total
 
-# PCA de caracteres del néctar de flores hembra
-# visualizando todas las combinaciones entre las variables
-pairs(nectar_h[8:29], lower.panel = NULL)
-# Calculando el PCA para flores hembra
-pca4 = prcomp(nectar_h[8:29], scale = T)
-summary(pca4)
-# Obteniendo información sobre los eigenvalues
-get_eigenvalue(pca4)
-# calculando la varianza explicada por cada componente
-fviz_eig(pca4, addlabels = T)
-# información que podemos obtener de las variables analizadas
-var = get_pca_var(pca4); var
-# Visualización de las variables
-fviz_pca_var(pca4, col.var = "black")
-
-# correlaciones entre calidades de variables
-corrplot(var$cos2, is.corr = F)
-# Calidad de cada variable 
-fviz_cos2(pca4, choice = "var", axes = 1:2)
-# graficando las variables en el mapa de factores
-fviz_pca_var(pca4, col.var = "cos2",
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
-             repel = TRUE # Avoid text overlapping
-)
-# Contribución a los componentes
-head(var$contrib)
-corrplot(var$contrib, is.corr=FALSE)    
-
-# Contributions of variables to PC1
-fviz_contrib(pca4, choice = "var", axes = 1, top = 10)
-# Contributions of variables to PC2
-fviz_contrib(pca4, choice = "var", axes = 2, top = 10)
-# contribución combinada de los componentes 1  y 2
-fviz_contrib(pca4, choice = "var", axes = 1:2, top = 10)
-# visualizando las variables coloreadas por contribución
-fviz_pca_var(pca4, col.var = "contrib",
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07")
-)
-
-# Solo caracteres del nectar
-fviz_pca_var(pca4, col.var = factor(c("nectar","nectar","nectar",
-                                      "nectar","nectar","aminoacid","aminoacid",
-                                      "aminoacid","aminoacid","aminoacid",
-                                      "aminoacid","aminoacid","aminoacid",
-                                      "aminoacid","aminoacid","aminoacid",
-                                      "aminoacid","aminoacid","aminoacid",
-                                      "aminoacid","aminoacid","aminoacid")), 
-             palette = c("#0073C2FF", "#EFC000FF"),
-             legend.title = "Cluster")
-
-### Graph of individuals (rows)
-ind = get_pca_ind(pca4)
-ind
-
-fviz_pca_ind(pca4)
-# Visualizando los individuos por cos2
-fviz_pca_ind(pca4, col.ind = "cos2", 
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-             repel = TRUE # Avoid text overlapping (slow if many points)
-)
-#
-fviz_pca_ind(pca4, pointsize = "cos2", 
-             pointshape = 21, fill = "#E7B800",
-             repel = TRUE # Avoid text overlapping (slow if many points)
-)
-
-# Total contribution on PC1 and PC2
-fviz_contrib(pca4, choice = "ind", axes = 1:2)
-
-# Agrupado por condición (SIN elipse)
-fviz_pca_ind(pca4,
-             geom.ind = "point", # show points only (nbut not "text")
-             fill.ind = nectar_h$condicion, # color by groups
-             palette = c("#00AFBB", "#E7B800"),
-             #addEllipses = TRUE, # Concentration ellipses
-             #ellipse.type = "euclid",
-             legend.title = "Condition",
-             title = "",
-             pointshape=21,
-             pointsize = 2
-)+
-labs(x = "PC 1 (54%)", y = "PC 2 (12.7%)")
-
-# Agrupado por condición (CON elipse)
-fviz_pca_ind(pca4,
-             geom.ind = "point", # show points only (nbut not "text")
-             fill.ind = nectar_h$condicion, # color by groups
-             palette = c("#00AFBB", "#E7B800"),
-             addEllipses = TRUE, # Concentration ellipses
-             #ellipse.type = "euclid",
-             legend.title = "Condition",
-             title = "",
-             pointshape=21,
-             pointsize = 2,
-             label = "none"
-)+
-  labs(x = "PC 1 (54%)", y = "PC 2 (12.7%)")
-
-
-# Agrupado por especie
-fviz_pca_ind(pca4,
-             geom.ind = "point", # show points only (nbut not "text")
-             col.ind = nectar_h$spp, # color by groups
-             palette = c("#00AFBB", "#E7B800","#FC4E07", "#00AFDB",
-                         "#E7B850"),
-             addEllipses = TRUE, # Concentration ellipses
-             #ellipse.type = "confidence",
-             legend.title = "Groups"
-)
-
-### agrupado por condición + las variables
-fviz_pca_biplot(pca4,
-                col.ind = nectar_h$condicion, palette = "jco",
-                addEllipses = TRUE, label = "var",
-                col.var = "black", repel = TRUE,
-                legend.title = "Condition"
-)
-
-library(MVN)
-# Flores hembra
-mvn(nectar_h[8:29], mvnTest = "hz", univariateTest = "SW", 
-    univariatePlot = "histogram")
-mvn(nectar_h[8:12], mvnTest = "hz", univariateTest = "SW", 
-    univariatePlot = "histogram")
-
-
-# Flores macho
-mvn(nectar_m[8:29], mvnTest = "hz", univariateTest = "SW", 
-    univariatePlot = "histogram")
-
-
-# PERMANOVA del nectar de flores hembra
-str(nectar_h)
-nectar_h[8:29]
-dune8 = nectar_h[8:29]
-# Calculando distancia euclidiana
-set.seed(0)
-# permanova
-dune.div8 <- adonis2(dune8 ~ condicion, data = nectar_h,
-                     permutations = 999, method="euclidean")
-dune.div8
-
-# calculando PERMANOVA por especie
-dune.div8 <- adonis2(dune8 ~ spp, data = nectar_h,
-                     permutations = 999, method="euclidean")
-dune.div8
-
-# overall tests
-#adonis2(dune ~ especie, data = hembras, 
-#        permutations = 999, method="euclidean", by = NULL)
-
-# calculando beta dispersión (homogeneidad de varianzas)
-dispersion5 <- betadisper(dune.dist5, group=amino$condición)
-permutest(dispersion5)
-plot(dispersion5, hull=FALSE, ellipse=T) ##sd ellipse
-# calculando dispersión por especie
-dispersion6 <- betadisper(dune.dist5, group=amino$spp)
-permutest(dispersion6)
-plot(dispersion6, hull=FALSE, ellipse=T) ##sd ellipse
-# calculando dispersión por sexo
-dispersion6 <- betadisper(dune.dist5, group=amino$sexo_flor)
-permutest(dispersion6)
-plot(dispersion6, hull=FALSE, ellipse=T) ##sd ellipse
-
-# MANOVA del nectar
-# MANOVA test
-mod1<-manova(cbind(fructose, glucose, sucrose) ~ condicion, 
-             data = nectar_h)
-summary(mod1) #Diferencias significativas
-
-
-
-### FLORES MACHO
-nectar_m = subset(nectar, sexo =="m")
-str(nectar_m)
-
-# PCA de caracteres del néctar de flores hembra
-# visualizando todas las combinaciones entre las variables
-pairs(nectar_m[8:29], lower.panel = NULL)
-# Calculando el PCA para flores machos
-pca5 = prcomp(nectar_m[8:29], scale = T)
-summary(pca5)
-# Obteniendo información sobre los eigenvalues
-get_eigenvalue(pca5)
-# calculando la varianza explicada por cada componente
-fviz_eig(pca5, addlabels = T)
-# información que podemos obtener de las variables analizadas
-var = get_pca_var(pca5); var
-# Visualización de las variables
-fviz_pca_var(pca5, col.var = "black")
-
-# correlaciones entre calidades de variables
-corrplot(var$cos2, is.corr = F)
-# Calidad de cada variable 
-fviz_cos2(pca5, choice = "var", axes = 1:2)
-# graficando las variables en el mapa de factores
-fviz_pca_var(pca5, col.var = "cos2",
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
-             repel = TRUE # Avoid text overlapping
-)
-# Contribución a los componentes
-head(var$contrib)
-corrplot(var$contrib, is.corr=FALSE)    
-
-# Contributions of variables to PC1
-fviz_contrib(pca5, choice = "var", axes = 1, top = 10)
-# Contributions of variables to PC2
-fviz_contrib(pca5, choice = "var", axes = 2, top = 10)
-# contribución combinada de los componentes 1  y 2
-fviz_contrib(pca5, choice = "var", axes = 1:2, top = 10)
-# visualizando las variables coloreadas por contribución
-fviz_pca_var(pca5, col.var = "contrib",
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07")
-)
-
-# Solo caracteres del nectar
-fviz_pca_var(pca5, col.var = factor(c("nectar","nectar","nectar",
-                                      "nectar","nectar","aminoacid","aminoacid",
-                                      "aminoacid","aminoacid","aminoacid",
-                                      "aminoacid","aminoacid","aminoacid",
-                                      "aminoacid","aminoacid","aminoacid",
-                                      "aminoacid","aminoacid","aminoacid",
-                                      "aminoacid","aminoacid","aminoacid")), 
-             palette = c("#0073C2FF", "#EFC000FF"),
-             legend.title = "Cluster")
-
-### Graph of individuals (rows)
-ind = get_pca_ind(pca5)
-ind
-
-fviz_pca_ind(pca5)
-# Visualizando los individuos por cos2
-fviz_pca_ind(pca5, col.ind = "cos2", 
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-             repel = TRUE # Avoid text overlapping (slow if many points)
-)
-#
-fviz_pca_ind(pca5, pointsize = "cos2", 
-             pointshape = 21, fill = "#E7B800",
-             repel = TRUE # Avoid text overlapping (slow if many points)
-)
-
-# Total contribution on PC1 and PC2
-fviz_contrib(pca5, choice = "ind", axes = 1:2)
-
-# Agrupado por condición (SIN elipse)
-fviz_pca_ind(pca5,
-             geom.ind = "point", # show points only (nbut not "text")
-             fill.ind = nectar_m$condicion, # color by groups
-             palette = c("#00AFBB", "#E7B800"),
-             #addEllipses = TRUE, # Concentration ellipses
-             #ellipse.type = "euclid",
-             legend.title = "Condition",
-             title = "",
-             pointshape=21,
-             pointsize = 2
-)+
-  labs(x = "PC 1 (53.4%)", y = "PC 2 (11.6%)")
-
-# Agrupado por condición (CON elipse)
-fviz_pca_ind(pca5,
-             geom.ind = "point", # show points only (nbut not "text")
-             fill.ind = nectar_m$condicion, # color by groups
-             palette = c("#00AFBB", "#E7B800"),
-             addEllipses = TRUE, # Concentration ellipses
-             #ellipse.type = "euclid",
-             legend.title = "Condition",
-             title = "",
-             pointshape=21,
-             pointsize = 2,
-             label = "none"
-)+
-  labs(x = "PC 1 (53.4%)", y = "PC 2 (11.6%)")
-
-# Agrupado por especie
-fviz_pca_ind(pca5,
-             geom.ind = "point", # show points only (nbut not "text")
-             col.ind = nectar_m$spp, # color by groups
-             palette = c("#00AFBB", "#E7B800","#FC4E07", "#00AFDB",
-                         "#E7B850", "#FF8400"),
-             addEllipses = TRUE, # Concentration ellipses
-             #ellipse.type = "confidence",
-             legend.title = "Groups"
-)
-
-### agrupado por condición + las variables
-fviz_pca_biplot(pca5,
-                col.ind = nectar_m$condicion, palette = "jco",
-                addEllipses = TRUE, label = "var",
-                col.var = "black", repel = TRUE,
-                legend.title = "Condition"
-)
-
-# PERMANOVA del nectar de floress macho
-str(nectar_m)
-nectar_m[8:29]
-dune9 = nectar_m[8:29]
-# Calculando distancia euclidiana
-set.seed(0)
-# permanova
-dune.div9 <- adonis2(dune9 ~ condicion, data = nectar_m,
-                     permutations = 999, method="euclidean")
-dune.div9
-
-# calculando PERMANOVA por especie
-dune.div9 <- adonis2(dune9 ~ spp, data = nectar_m,
-                     permutations = 999, method="euclidean")
-dune.div9
-
-# overall tests
-#adonis2(dune ~ especie, data = hembras, 
-#        permutations = 999, method="euclidean", by = NULL)
-
-# calculando beta dispersión (homogeneidad de varianzas)
-dispersion5 <- betadisper(dune.dist5, group=amino$condición)
-permutest(dispersion5)
-plot(dispersion5, hull=FALSE, ellipse=T) ##sd ellipse
-# calculando dispersión por especie
-dispersion6 <- betadisper(dune.dist5, group=amino$spp)
-permutest(dispersion6)
-plot(dispersion6, hull=FALSE, ellipse=T) ##sd ellipse
-# calculando dispersión por sexo
-dispersion6 <- betadisper(dune.dist5, group=amino$sexo_flor)
-permutest(dispersion6)
-plot(dispersion6, hull=FALSE, ellipse=T) ##sd ellipse
-
-
-##### PCA DE RASGOS DEL POLEN ####
-setwd("/home/luis/Documents/3_Doctorado_UNAM/a-proyecto/analisis_florales_tesis_2022/rasgos_polen")
-# cargando base depurada de todos los rasgos de polen
-pollen = read.csv("rasgos_pollen2.csv", header = T)
-head(pollen)
-str(pollen)
-
-tapply(pollen$produ, pollen$spp, mean)
-tapply(pollen$tam, pollen$spp, mean)
-tapply(pollen$conc.prot, pollen$spp, mean)
-tapply(pollen$conc_lip, pollen$spp, mean)
-tapply(pollen$pl, pollen$spp, mean)
-
-# PCA de caracteres del nectar
-head(pollen)
-str(pollen)
-pairs(pollen[6:10])
-pca6 <- prcomp(pollen[, 6:10], scale = T)
-summary(pca6)
-pca6$rotation[, 1:2]
-plot(pca6)
-#write.csv(pca1$rotation[, 1:2], file = "pca_hembras.csv")
-biplot(pca6, scale=0)
-
-# Obteniendo información sobre los eigenvalues
-get_eigenvalue(pca6)
-# calculando la varianza explicada por cada componente
-fviz_eig(pca6, addlabels = T)
-# información que podemos obtener de las variables analizadas
-var = get_pca_var(pca6); var
-# Visualización de las variables
-fviz_pca_var(pca6, col.var = "black")
-
-# correlaciones entre calidades de variables
-corrplot(var$cos2, is.corr = F)
-# Calidad de cada variable 
-fviz_cos2(pca6, choice = "var", axes = 1:2)
-# graficando las variables en el mapa de factores
-fviz_pca_var(pca6, col.var = "cos2",
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
-             repel = TRUE # Avoid text overlapping
-)
-# Contribución a los componentes
-head(var$contrib)
-corrplot(var$contrib, is.corr=FALSE)    
-
-# Contributions of variables to PC1
-fviz_contrib(pca6, choice = "var", axes = 1, top = 10)
-# Contributions of variables to PC2
-fviz_contrib(pca6, choice = "var", axes = 2, top = 10)
-# contribución combinada de los componentes 1  y 2
-fviz_contrib(pca6, choice = "var", axes = 1:2, top = 10)
-# visualizando las variables coloreadas por contribución
-fviz_pca_var(pca6, col.var = "contrib",
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07")
-)
-
-### Graph of individuals (rows)
-ind = get_pca_ind(pca6)
-ind
-
-fviz_pca_ind(pca6)
-# Visualizando los individuos por cos2
-fviz_pca_ind(pca6, col.ind = "cos2", 
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-             repel = TRUE # Avoid text overlapping (slow if many points)
-)
-#
-fviz_pca_ind(pca6, pointsize = "cos2", 
-             pointshape = 21, fill = "#E7B800",
-             repel = TRUE # Avoid text overlapping (slow if many points)
-)
-
-# Total contribution on PC1 and PC2
-fviz_contrib(pca6, choice = "ind", axes = 1:2)
-
-# Agrupado por condición (SIN elipse)
-fviz_pca_ind(pca6,
-             geom.ind = "point", # show points only (nbut not "text")
-             fill.ind = pollen$condicion, # color by groups
-             palette = c("#00AFBB", "#E7B800"),
-             #addEllipses = TRUE, # Concentration ellipses
-             #ellipse.type = "euclid",
-             legend.title = "Condition",
-             title = "",
-             pointshape=21,
-             pointsize = 2
-)+
- labs(x = "PC 1 (36.1%)", y = "PC 2 (31.4%)")
-
-# Agrupado por condición (CON elipse)
-fviz_pca_ind(pca6,
-             geom.ind = "point", # show points only (nbut not "text")
-             fill.ind = pollen$condicion, # color by groups
-             palette = c("#00AFBB", "#E7B800"),
-             addEllipses = TRUE, # Concentration ellipses
-             #ellipse.type = "euclid",
-             legend.title = "Condition",
-             title = "",
-             pointshape=21,
-             pointsize = 2,
-             label = "none"
-)+
-  labs(x = "PC 1 (36.1%)", y = "PC 2 (31.4%)")
-
-# Agrupado por especie
-fviz_pca_ind(pca6,
-             geom.ind = "point", # show points only (nbut not "text")
-             col.ind = pollen$spp, # color by groups
-             palette = c("#00AFBB", "#E7B800","#FC4E07", "#00AFDB",
-                         "#E7B850", "#FF8400"),
-             addEllipses = TRUE, # Concentration ellipses
-             #ellipse.type = "confidence",
-             legend.title = "Groups"
-)
-
-### agrupado por condición + las variables
-fviz_pca_biplot(pca6,
-                col.ind = pollen$condicion, palette = "jco",
-                addEllipses = TRUE, label = "var",
-                col.var = "black", repel = TRUE,
-                legend.title = "Condition"
-)
-
-# PERMANOVA del polen
-str(pollen)
-pollen[6:10]
-dune10 = pollen[6:10]
-# Calculando distancia euclidiana
-set.seed(0)
-# permanova
-dune.div10 <- adonis2(dune10 ~ condicion, data = pollen,
-                     permutations = 999, method="euclidean")
-dune.div10
-
-# calculando PERMANOVA por especie
-dune.div11 <- adonis2(dune10 ~ spp, data = pollen,
-                     permutations = 999, method="euclidean")
-dune.div11
-
-# overall tests
-#adonis2(dune ~ especie, data = hembras, 
-#        permutations = 999, method="euclidean", by = NULL)
-
-# calculando beta dispersión (homogeneidad de varianzas)
-dispersion5 <- betadisper(dune.dist5, group=amino$condición)
-permutest(dispersion5)
-plot(dispersion5, hull=FALSE, ellipse=T) ##sd ellipse
-# calculando dispersión por especie
-dispersion6 <- betadisper(dune.dist5, group=amino$spp)
-permutest(dispersion6)
-plot(dispersion6, hull=FALSE, ellipse=T) ##sd ellipse
-# calculando dispersión por sexo
-dispersion6 <- betadisper(dune.dist5, group=amino$sexo_flor)
-permutest(dispersion6)
-plot(dispersion6, hull=FALSE, ellipse=T) ##sd ellipse
-
-# Cargando paquete para normalidad de multivarianza
-library(mvnormtest)
-data("EuStockMarkets")
-View(EuStockMarkets)
-C <- t(EuStockMarkets[15:29,1:4])
-mshapiro.test(C)
-# Transponiendo tabla
-C = t(pollen[6:10])
-# Calculando normalidad de multivarianza
-mshapiro.test(C) # no es normal
-
-# Calculando normalidad de cada grupo por variable dependiente
-normal<-function(vec){
-  shapiro.test(vec)$p
-}
-aggregate(pollen[,6:10],list(pollen$condicion), normal)
-# Calculando normalidad multivariada
-library(MVN)
-mvn(pollen[, c(6, 7, 8, 9, 10)], mvnTest = "hz", univariateTest = "SW", 
-    univariatePlot = "histogram")
-
-
-# MANOVA test
-mod1<-manova(cbind(produ, tam, conc.prot, conc_lip, pl) ~ condicion, 
-             data = pollen)
-summary(mod1) #Diferencias significativas
-
-
-
-
-#### CALCULANDO SEÑAL FILOGENÉTICA ####
-# Cargando base de datos de todos los caracteres de flores hembra (promedios)
-traits_hem = read.csv("hembras_mean.csv", header = T, row.names = 1) #, 
-head(traits_hem)
-str(traits_hem)
-traits_hem[2:35]
-
-#### Calculando la señal filogenetica con la función multiPhylosignal del
-# paquete "picante"
-library(picante)
-head(traits_hem)
-arbol <- read.nexus("tree7.nex")
-class(arbol)
-arbol
-names(arbol)
-arbol$tip.label
-
-# calculando la K de Blomberg. Este valor mide la señal filogenetica o la 
-# tendencia de especies relacioanadas a parecerse unas con otras
-traits_h <- (traits_hem[2:35])
-str(traits_h)
-multiPhylosignal(traits_h, arbol)
-#multiPhylosignal(traits_h, multi2di(arbol))
-# Guardando tabla
-write.csv(multiPhylosignal(traits_h, arbol),
-          file = "K_blombergs.csv")
-
-#### Calculando señal filogenética con la lambda de Pagel con el ####
-# paquete "phytools"
-# Load necessary libraries
-library(phytools)
-library(dplyr)
-library(future.apply)  # For cross-platform parallelization
-
-# cargando la base de datos que contiene los promedios de todos los caracteres
-# medidos en flores hembra
-traits_hem = read.csv("hembras_mean.csv", header = T)
-str(traits_hem)
-traits_h <- (traits_hem[3:36])
-str(traits_h)
-
-# Function to calculate Pagel's lambda and p-value for each trait
-calculate_lambda <- function(trait_column, tree) {
-  # Combine species and trait column into a temporary data frame
-  temp_data <- data.frame(species = traits_hem$especie, trait = trait_column)
-  
-  # Calculate the mean trait value per species
-  #species_means <- temp_data %>%
-   # group_by(species) %>%
-    #summarise(mean_trait = mean(trait, na.rm = TRUE))
-  
-  # Create a named vector of trait values for the species
-  trait_vector <- temp_data$trait
-  names(trait_vector) <- temp_data$species
-  
-  # Use the phylosig function to calculate Pagel's lambda
-  lambda_result <- phylosig(tree, trait_vector, method = "lambda", test = TRUE)
-  
-  # Return a named vector with lambda and p-value
-  return(c(lambda = lambda_result$lambda, p_value = lambda_result$P))  # Corrected p-value reference
-}
-
-# Set up parallelization using future.apply (works across platforms)
-#plan(multisession)  # Enables parallel processing
-
-# Apply this function to each trait in columns 3 to 12 using future_sapply for parallel execution
-trait_results <- future_sapply(traits_hem[, 3:36], calculate_lambda, tree = arbol)
-
-
-# Convert the result to a data frame
-trait_results_df <- as.data.frame(t(trait_results))  # Transpose to get traits in rows
-trait_results_df$trait <- colnames(traits_hem)[3:36]  # Add trait names as a column
-
-# View the result
-print(trait_results_df)
-
-# Optionally, save the results to a file
-write.csv(trait_results_df, "trait_pagels_lambda_results_hembras.csv",
-          row.names = FALSE)
-
-# cargando la base de datos que contiene los promedios de todos los caracteres
-# medidos en flores macho
-traits_mac = read.csv("machos_mean.csv", header = T)
-str(traits_mac)
-
-traits_m <- (traits_mac[3:39])
-str(traits_m)
-
-# Function to calculate Pagel's lambda and p-value for each trait
-calculate_lambda <- function(trait_column, tree) {
-  # Combine species and trait column into a temporary data frame
-  temp_data <- data.frame(species = traits_mac$especie, trait = trait_column)
-  
-  # Calculate the mean trait value per species
-  #species_means <- temp_data %>%
-  # group_by(species) %>%
-  #summarise(mean_trait = mean(trait, na.rm = TRUE))
-  
-  # Create a named vector of trait values for the species
-  trait_vector <- temp_data$trait
-  names(trait_vector) <- temp_data$species
-  
-  # Use the phylosig function to calculate Pagel's lambda
-  lambda_result <- phylosig(tree, trait_vector, method = "lambda", test = TRUE)
-  
-  # Return a named vector with lambda and p-value
-  return(c(lambda = lambda_result$lambda, p_value = lambda_result$P))  # Corrected p-value reference
-}
-
-# Set up parallelization using future.apply (works across platforms)
-#plan(multisession)  # Enables parallel processing
-
-# Apply this function to each trait in columns 3 to 12 using future_sapply for parallel execution
-trait_results <- future_sapply(traits_mac[, 3:39], calculate_lambda, tree = arbol)
-
-
-# Convert the result to a data frame
-trait_results_df <- as.data.frame(t(trait_results))  # Transpose to get traits in rows
-trait_results_df$trait <- colnames(traits_mac)[3:39]  # Add trait names as a column
-
-# View the result
-print(trait_results_df)
-
-# Optionally, save the results to a file
-write.csv(trait_results_df, "trait_pagels_lambda_results_machos.csv",
-          row.names = FALSE)
-
-
-
-
-
-
-#### Calculando señal filogenética con la K de Blomberg con el paquete ####
-# "phytools"
-# cargando la base de datos que contiene los promedios de todos los caracteres
-# medidos en flores hembra
-traits_hem = read.csv("hembras_mean.csv", header = T)
-str(traits_hem)
-traits_h <- (traits_hem[3:36])
-str(traits_h)
-
-# Function to calculate Blomberg's K and p-value for each trait
-calculate_ka <- function(trait_column, tree) {
-  # Combine species and trait column into a temporary data frame
-  temp_data <- data.frame(species = traits_hem$especie, trait = trait_column)
-  
-  # Calculate the mean trait value per species
-  #species_means <- temp_data %>%
-  # group_by(species) %>%
-  #summarise(mean_trait = mean(trait, na.rm = TRUE))
-  
-  # Create a named vector of trait values for the species
-  trait_vector <- temp_data$trait
-  names(trait_vector) <- temp_data$species
-  
-  # Use the phylosig function to calculate Pagel's lambda
-  ka_result <- phylosig(tree, trait_vector, method = "K", test = TRUE)
-  
-  # Return a named vector with lambda and p-value
-  return(c(ka = ka_result$K, p_value = ka_result$P))  # Corrected p-value reference
-}
-
-# Set up parallelization using future.apply (works across platforms)
-#plan(multisession)  # Enables parallel processing
-
-# Apply this function to each trait in columns 3 to 12 using future_sapply for parallel execution
-trait_results_ka <- future_sapply(traits_hem[, 3:36], calculate_ka, tree = arbol)
-
-
-# Convert the result to a data frame
-trait_results_ka_df <- as.data.frame(t(trait_results))  # Transpose to get traits in rows
-trait_results_ka_df$trait <- colnames(traits_hem)[3:36]  # Add trait names as a column
-
-# View the result
-print(trait_results_ka_df)
-
-# K de Blomberg
-write.csv(trait_results_ka_df, "trait_blomberg_K_results_hembras.csv",
-          row.names = FALSE)
-
-
-# cargando la base de datos que contiene los promedios de todos los caracteres
-# medidos en flores MACHO para calcular la K de Blomberg
-traits_mac = read.csv("machos_mean.csv", header = T)
-str(traits_mac)
-
-traits_m <- (traits_mac[3:39])
-str(traits_m)
-
-# Function to calculate Blomberg's K and p-value for each trait
-calculate_ka <- function(trait_column, tree) {
-  # Combine species and trait column into a temporary data frame
-  temp_data <- data.frame(species = traits_mac$especie, trait = trait_column)
-  
-  # Calculate the mean trait value per species
-  #species_means <- temp_data %>%
-  # group_by(species) %>%
-  #summarise(mean_trait = mean(trait, na.rm = TRUE))
-  
-  # Create a named vector of trait values for the species
-  trait_vector <- temp_data$trait
-  names(trait_vector) <- temp_data$species
-  
-  # Use the phylosig function to calculate Pagel's lambda
-  ka_result <- phylosig(tree, trait_vector, method = "K", test = TRUE)
-  
-  # Return a named vector with lambda and p-value
-  return(c(ka = ka_result$K, p_value = ka_result$P))  # Corrected p-value reference
-}
-
-# Set up parallelization using future.apply (works across platforms)
-#plan(multisession)  # Enables parallel processing
-
-# Apply this function to each trait in columns 3 to 12 using future_sapply for parallel execution
-trait_results_ka <- future_sapply(traits_mac[, 3:39], calculate_ka, tree = arbol)
-
-
-# Convert the result to a data frame
-trait_results_ka_df <- as.data.frame(t(trait_results_ka))  # Transpose to get traits in rows
-trait_results_ka_df$trait <- colnames(traits_mac)[3:39]  # Add trait names as a column
-
-# View the result
-print(trait_results_ka_df)
-
-# K de Blomberg
-write.csv(trait_results_ka_df, "trait_blomberg_K_results_machos.csv",
-          row.names = FALSE)
-
-
-
-
-#### Calculando señal filogenetica por separado para cada rasgo ####
-# cargando base de datos
-traits_hem = read.csv("hembras_mean.csv", header = T, row.names = 1) #, 
-head(traits_hem)
-str(traits_hem)
-arbol$tip.label # cas, cm, caa, cpf, cpp, cf
-# Poniendo el nombre de cada especie
-homeRange <- setNames(traits_hem$TL,
-                    rownames(traits_hem))
-# Calculando señal filogenétiNDf# Calculando señal filogenética
-#hrangeLambda = 
-kresult = phylosig(arbol, homeRange, method = "K", test = TRUE)
-kresult$K
-kresult$P
-
-hrangeLambda
-
-# Renombrando 
-arbol$tip.label
-
-relabel.tips <- c("Cucurbita argyrosperma subsp. sororia",
-                  "Cucurbita moschata*",
-                  "Cucurbita argyrosperma subsp. argyrosperma*",
-                  "Cucurbita pepo subsp. fraterna",
-                  "Cucurbita pepo subsp. pepo*",
-                  "Cucurbita foetidissima")
-# renombrar terminales
-#arbol$tip.label <- mixedFontLabel(relabel.tips, italic = 1)
-arbol$tip.label <- relabel.tips
-plotTree(arbol)
-
-library(ape)
-genus <- c("Cucurbita", "Cucurbita", "Cucurbita", "Cucurbita", "Cucurbita",
-           "Cucurbita")
-species <- c("argyrosperma subsp. sororia", "moschata*", 
-             "argyrosperma subsp. argyrosperma*", "pepo subsp. fraterna",
-             "pepo subsp. pepo*", "foetidissima")
-
-arbol$tip.label <- mixedFontLabel(genus, species, italic = 1:2)
-plot(arbol)
-
-
-
-layout(matrix(c(1, 2), 2))
-plot(tr)
-
-
-plot(c(0, 2), c(0, 2))
-text(1, 1, bquote(
-  paste(
-    italic("Italic Text:"),
-    " Some words with new lines. ",
-    italic("More italic text:"),
-    "Yet more words divided by new lines. ",
-    italic("Italics again:"),
-    "And more text with new lines.",
-    sep = ""
-  )
-)
-)
 
 
 ##### PCA de aminoacidos de flores hembra #####
@@ -1619,8 +891,6 @@ permutest(dispersion6)
 plot(dispersion6, hull=FALSE, ellipse=T) ##sd ellipse
 
 
-
-
 #### Pollen traits of Cucurbita species ####
 #### pollen production ####
 contador = read.csv("produccion_polen.csv", header = T)
@@ -1782,3 +1052,294 @@ summary(modpl)
 Anova(modpl)
 
 
+#### CALCULANDO SEÑAL FILOGENÉTICA ####
+# Cargando base de datos de todos los caracteres de flores hembra (promedios)
+traits_hem = read.csv("hembras_mean.csv", header = T, row.names = 1) #, 
+head(traits_hem)
+str(traits_hem)
+traits_hem[2:35]
+
+#### Calculando la señal filogenetica con la función multiPhylosignal del
+# paquete "picante"
+library(picante)
+head(traits_hem)
+arbol <- read.nexus("tree7.nex")
+class(arbol)
+arbol
+names(arbol)
+arbol$tip.label
+
+# calculando la K de Blomberg. Este valor mide la señal filogenetica o la 
+# tendencia de especies relacioanadas a parecerse unas con otras
+traits_h <- (traits_hem[2:35])
+str(traits_h)
+multiPhylosignal(traits_h, arbol)
+#multiPhylosignal(traits_h, multi2di(arbol))
+# Guardando tabla
+write.csv(multiPhylosignal(traits_h, arbol),
+          file = "K_blombergs.csv")
+
+#### Calculando señal filogenética con la lambda de Pagel con el ####
+# paquete "phytools"
+# Load necessary libraries
+library(phytools)
+library(dplyr)
+library(future.apply)  # For cross-platform parallelization
+
+# cargando la base de datos que contiene los promedios de todos los caracteres
+# medidos en flores hembra
+traits_hem = read.csv("hembras_mean.csv", header = T)
+str(traits_hem)
+traits_h <- (traits_hem[3:36])
+str(traits_h)
+
+# Function to calculate Pagel's lambda and p-value for each trait
+calculate_lambda <- function(trait_column, tree) {
+  # Combine species and trait column into a temporary data frame
+  temp_data <- data.frame(species = traits_hem$especie, trait = trait_column)
+  
+  # Calculate the mean trait value per species
+  #species_means <- temp_data %>%
+  # group_by(species) %>%
+  #summarise(mean_trait = mean(trait, na.rm = TRUE))
+  
+  # Create a named vector of trait values for the species
+  trait_vector <- temp_data$trait
+  names(trait_vector) <- temp_data$species
+  
+  # Use the phylosig function to calculate Pagel's lambda
+  lambda_result <- phylosig(tree, trait_vector, method = "lambda", test = TRUE)
+  
+  # Return a named vector with lambda and p-value
+  return(c(lambda = lambda_result$lambda, p_value = lambda_result$P))  # Corrected p-value reference
+}
+
+# Set up parallelization using future.apply (works across platforms)
+#plan(multisession)  # Enables parallel processing
+
+# Apply this function to each trait in columns 3 to 12 using future_sapply for parallel execution
+trait_results <- future_sapply(traits_hem[, 3:36], calculate_lambda, tree = arbol)
+
+
+# Convert the result to a data frame
+trait_results_df <- as.data.frame(t(trait_results))  # Transpose to get traits in rows
+trait_results_df$trait <- colnames(traits_hem)[3:36]  # Add trait names as a column
+
+# View the result
+print(trait_results_df)
+
+# Optionally, save the results to a file
+write.csv(trait_results_df, "trait_pagels_lambda_results_hembras.csv",
+          row.names = FALSE)
+
+# cargando la base de datos que contiene los promedios de todos los caracteres
+# medidos en flores macho
+traits_mac = read.csv("machos_mean.csv", header = T)
+str(traits_mac)
+
+traits_m <- (traits_mac[3:39])
+str(traits_m)
+
+# Function to calculate Pagel's lambda and p-value for each trait
+calculate_lambda <- function(trait_column, tree) {
+  # Combine species and trait column into a temporary data frame
+  temp_data <- data.frame(species = traits_mac$especie, trait = trait_column)
+  
+  # Calculate the mean trait value per species
+  #species_means <- temp_data %>%
+  # group_by(species) %>%
+  #summarise(mean_trait = mean(trait, na.rm = TRUE))
+  
+  # Create a named vector of trait values for the species
+  trait_vector <- temp_data$trait
+  names(trait_vector) <- temp_data$species
+  
+  # Use the phylosig function to calculate Pagel's lambda
+  lambda_result <- phylosig(tree, trait_vector, method = "lambda", test = TRUE)
+  
+  # Return a named vector with lambda and p-value
+  return(c(lambda = lambda_result$lambda, p_value = lambda_result$P))  # Corrected p-value reference
+}
+
+# Set up parallelization using future.apply (works across platforms)
+#plan(multisession)  # Enables parallel processing
+
+# Apply this function to each trait in columns 3 to 12 using future_sapply for parallel execution
+trait_results <- future_sapply(traits_mac[, 3:39], calculate_lambda, tree = arbol)
+
+
+# Convert the result to a data frame
+trait_results_df <- as.data.frame(t(trait_results))  # Transpose to get traits in rows
+trait_results_df$trait <- colnames(traits_mac)[3:39]  # Add trait names as a column
+
+# View the result
+print(trait_results_df)
+
+# Optionally, save the results to a file
+write.csv(trait_results_df, "trait_pagels_lambda_results_machos.csv",
+          row.names = FALSE)
+
+
+
+
+
+
+#### Calculando señal filogenética con la K de Blomberg con el paquete ####
+# "phytools"
+# cargando la base de datos que contiene los promedios de todos los caracteres
+# medidos en flores hembra
+traits_hem = read.csv("hembras_mean.csv", header = T)
+str(traits_hem)
+traits_h <- (traits_hem[3:36])
+str(traits_h)
+
+# Function to calculate Blomberg's K and p-value for each trait
+calculate_ka <- function(trait_column, tree) {
+  # Combine species and trait column into a temporary data frame
+  temp_data <- data.frame(species = traits_hem$especie, trait = trait_column)
+  
+  # Calculate the mean trait value per species
+  #species_means <- temp_data %>%
+  # group_by(species) %>%
+  #summarise(mean_trait = mean(trait, na.rm = TRUE))
+  
+  # Create a named vector of trait values for the species
+  trait_vector <- temp_data$trait
+  names(trait_vector) <- temp_data$species
+  
+  # Use the phylosig function to calculate Pagel's lambda
+  ka_result <- phylosig(tree, trait_vector, method = "K", test = TRUE)
+  
+  # Return a named vector with lambda and p-value
+  return(c(ka = ka_result$K, p_value = ka_result$P))  # Corrected p-value reference
+}
+
+# Set up parallelization using future.apply (works across platforms)
+#plan(multisession)  # Enables parallel processing
+
+# Apply this function to each trait in columns 3 to 12 using future_sapply for parallel execution
+trait_results_ka <- future_sapply(traits_hem[, 3:36], calculate_ka, tree = arbol)
+
+
+# Convert the result to a data frame
+trait_results_ka_df <- as.data.frame(t(trait_results))  # Transpose to get traits in rows
+trait_results_ka_df$trait <- colnames(traits_hem)[3:36]  # Add trait names as a column
+
+# View the result
+print(trait_results_ka_df)
+
+# K de Blomberg
+write.csv(trait_results_ka_df, "trait_blomberg_K_results_hembras.csv",
+          row.names = FALSE)
+
+
+# cargando la base de datos que contiene los promedios de todos los caracteres
+# medidos en flores MACHO para calcular la K de Blomberg
+traits_mac = read.csv("machos_mean.csv", header = T)
+str(traits_mac)
+
+traits_m <- (traits_mac[3:39])
+str(traits_m)
+
+# Function to calculate Blomberg's K and p-value for each trait
+calculate_ka <- function(trait_column, tree) {
+  # Combine species and trait column into a temporary data frame
+  temp_data <- data.frame(species = traits_mac$especie, trait = trait_column)
+  
+  # Calculate the mean trait value per species
+  #species_means <- temp_data %>%
+  # group_by(species) %>%
+  #summarise(mean_trait = mean(trait, na.rm = TRUE))
+  
+  # Create a named vector of trait values for the species
+  trait_vector <- temp_data$trait
+  names(trait_vector) <- temp_data$species
+  
+  # Use the phylosig function to calculate Pagel's lambda
+  ka_result <- phylosig(tree, trait_vector, method = "K", test = TRUE)
+  
+  # Return a named vector with lambda and p-value
+  return(c(ka = ka_result$K, p_value = ka_result$P))  # Corrected p-value reference
+}
+
+# Set up parallelization using future.apply (works across platforms)
+#plan(multisession)  # Enables parallel processing
+
+# Apply this function to each trait in columns 3 to 12 using future_sapply for parallel execution
+trait_results_ka <- future_sapply(traits_mac[, 3:39], calculate_ka, tree = arbol)
+
+
+# Convert the result to a data frame
+trait_results_ka_df <- as.data.frame(t(trait_results_ka))  # Transpose to get traits in rows
+trait_results_ka_df$trait <- colnames(traits_mac)[3:39]  # Add trait names as a column
+
+# View the result
+print(trait_results_ka_df)
+
+# K de Blomberg
+write.csv(trait_results_ka_df, "trait_blomberg_K_results_machos.csv",
+          row.names = FALSE)
+
+
+
+
+#### Calculando señal filogenetica por separado para cada rasgo ####
+# cargando base de datos
+traits_hem = read.csv("hembras_mean.csv", header = T, row.names = 1) #, 
+head(traits_hem)
+str(traits_hem)
+arbol$tip.label # cas, cm, caa, cpf, cpp, cf
+# Poniendo el nombre de cada especie
+homeRange <- setNames(traits_hem$TL,
+                      rownames(traits_hem))
+# Calculando señal filogenétiNDf# Calculando señal filogenética
+#hrangeLambda = 
+kresult = phylosig(arbol, homeRange, method = "K", test = TRUE)
+kresult$K
+kresult$P
+
+hrangeLambda
+
+# Renombrando 
+arbol$tip.label
+
+relabel.tips <- c("Cucurbita argyrosperma subsp. sororia",
+                  "Cucurbita moschata*",
+                  "Cucurbita argyrosperma subsp. argyrosperma*",
+                  "Cucurbita pepo subsp. fraterna",
+                  "Cucurbita pepo subsp. pepo*",
+                  "Cucurbita foetidissima")
+# renombrar terminales
+#arbol$tip.label <- mixedFontLabel(relabel.tips, italic = 1)
+arbol$tip.label <- relabel.tips
+plotTree(arbol)
+
+library(ape)
+genus <- c("Cucurbita", "Cucurbita", "Cucurbita", "Cucurbita", "Cucurbita",
+           "Cucurbita")
+species <- c("argyrosperma subsp. sororia", "moschata*", 
+             "argyrosperma subsp. argyrosperma*", "pepo subsp. fraterna",
+             "pepo subsp. pepo*", "foetidissima")
+
+arbol$tip.label <- mixedFontLabel(genus, species, italic = 1:2)
+plot(arbol)
+
+
+
+layout(matrix(c(1, 2), 2))
+plot(tr)
+
+
+plot(c(0, 2), c(0, 2))
+text(1, 1, bquote(
+  paste(
+    italic("Italic Text:"),
+    " Some words with new lines. ",
+    italic("More italic text:"),
+    "Yet more words divided by new lines. ",
+    italic("Italics again:"),
+    "And more text with new lines.",
+    sep = ""
+  )
+)
+)

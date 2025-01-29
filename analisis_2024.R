@@ -432,8 +432,7 @@ plot(residuals(volu2))
 volumen2 <- volumen %>%
   mutate(especie = fct_relevel(especie,
                                 "1CF","2CPF", "4CAS", "3CPP", "5CAA", "6CM"))
-
-
+# ggplot
 ggplot(volumen2, aes(x = especie, y = VN, fill = especie))+
   geom_boxplot(alpha = 0.5)+
   #geom_point(size = 2, alpha = 0.3, 
@@ -443,37 +442,77 @@ ggplot(volumen2, aes(x = especie, y = VN, fill = especie))+
   scale_x_discrete(labels=c("1CF" = "CF", "2CPF" = "CPF",
                             "4CAS" = "CAS", "3CPP" = "CPP", "5CAA" = "CAA",
                             "6CM" = "CM"))+
-  #theme_bw()+
   theme_classic()+
+  #theme(panel.grid.major = element_blank(), 
+   #     panel.background = element_blank())+
   theme(axis.text = element_text(face = "bold"))+
   theme(legend.position = "none")+
   scale_fill_brewer(palette = "Dark2")
 
 
-
-#ggplot(hem_nec, aes(x=especie,y=VN, fill = condición))+
-  #geom_boxplot()+
-  #geom_point(size = 2, alpha = .3, #aes(color = especie)
+# Plot of nectar volume of pistillate flowers
+nec_pis = subset(volumen2, sexo == "Pistillate")
+str(nec_pis)
+# ggplot
+pisti = ggplot(nec_pis, aes(x = especie, y = VN, fill = especie))+
+  geom_boxplot(alpha = 0.5)+
+  #geom_point(size = 2, alpha = 0.3, 
   #           position = position_jitter(seed = 1, width = .1))+
-  #labs(x="Especies", y = "Volumen de néctar (μl)")+
-  #scale_x_discrete(labels=c("1CF" = "CF", "2CPF" = "CPF",
-  #                          "3CPP" = "CPP", "4CAS" = "CAS", "5CAA" = "CAA",
-  #                          "6CM" = "CM"))+
-  #theme_bw()+
-  #theme(axis.text = element_text(face = "bold"))+
-  #scale_color_discrete(name="Species",
-  #                     labels = c("CF", "CPF", "CPP", "CAS", "CAA", "CM"))+
-  annotate("text", x=1, y=35, label= "ab", size = 5)+
-  annotate("text", x=2, y=50, label= "a", size = 5)+
-  annotate("text", x=3, y=205, label= "c", size = 5)+
-  annotate("text", x=4, y=65, label= "a", size = 5)+
-  annotate("text", x=5, y=177, label= "b", size = 5)+
-  annotate("text", x=6, y=165, label= "bc", size = 5)+
-  annotate("text", x=1.5, y= 200, label = "F=11.44, gl=5, p < 0.001")+
-  #theme(legend.position = "none")+
-  #theme(axis.title.x = element_blank())+
+  labs(x="Species", y = "Nectar volume (μl)")+
+  scale_x_discrete(labels=c("1CF" = "CF", "2CPF" = "CPF",
+                            "4CAS" = "CAS", "3CPP" = "CPP", "5CAA" = "CAA",
+                            "6CM" = "CM"))+
+  theme_classic()+
+  #theme(panel.grid.major = element_blank(), 
+  #     panel.background = element_blank())+
+  theme(axis.text = element_text(face = "bold"))+
+  theme(legend.position = "none")+
+  scale_fill_brewer(palette = "Dark2")+
+  annotate("text", x=1, y=33, label= "ab", size = 4)+
+  annotate("text", x=2, y=50, label= "ab", size = 4)+
+  annotate("text", x=3, y=85, label= "a", size = 4)+
+  annotate("text", x=4, y=205, label= "c", size = 4)+
+  annotate("text", x=5, y=177, label= "bc", size = 4)+
+  annotate("text", x=6, y=165, label= "bc", size = 4)
 
+# Plot of nectar volume of staminate flowers
+nec_sta = subset(volumen2, sexo == "Staminate")
+str(nec_sta)
+# ggplot
+stami = ggplot(nec_sta, aes(x = especie, y = VN, fill = especie))+
+  geom_boxplot(alpha = 0.5)+
+  #geom_point(size = 2, alpha = 0.3, 
+  #           position = position_jitter(seed = 1, width = .1))+
+  labs(x="Species", y = "Nectar volume (μl)")+
+  scale_x_discrete(labels=c("1CF" = "CF", "2CPF" = "CPF",
+                            "4CAS" = "CAS", "3CPP" = "CPP", "5CAA" = "CAA",
+                            "6CM" = "CM"))+
+  theme_classic()+
+  #theme(panel.grid.major = element_blank(), 
+  #     panel.background = element_blank())+
+  theme(axis.text = element_text(face = "bold"))+
+  theme(legend.position = "none")+
+  scale_fill_brewer(palette = "Dark2")+
+  annotate("text", x=1, y=18, label= "a", size = 4)+
+  annotate("text", x=2, y=22, label= "a", size = 4)+
+  annotate("text", x=3, y=62, label= "ab", size = 4)+
+  annotate("text", x=4, y=88, label= "b", size = 4)+
+  annotate("text", x=5, y=71, label= "b", size = 4)+
+  annotate("text", x=6, y=63, label= "ab", size = 4)
 
+# code to paste graphs
+# loading packages
+library(gridExtra)
+library(cowplot)
+library(ggpubr)
+# joining plots
+gt <- ggarrange(pisti, stami,
+                ncol = 2, nrow = 1, common.legend = FALSE, legend = NULL,
+                labels="AUTO")
+gt
+# Exporting plot
+ggsave("Figure_2.png", device = "png", width = 177, height = 108,
+       units = "mm", dpi = 600, bg = "white")
 
 
 #### Nectar sugar concentrations ####
@@ -756,11 +795,7 @@ fviz_pca_ind(pca4,
 library(gridExtra)
 library(cowplot)
 library(ggpubr)
-# joining plots
-gt <- ggarrange(pca_hembras, pca_machos,
-                ncol = 1, nrow = 2, common.legend = TRUE, legend = "right",
-                labels="AUTO")
-gt
+
 # Exporting plot
 ggsave("Figure_3.png", device = "png", width = 177, height = 108,
        units = "mm", dpi = 600, bg = "white")

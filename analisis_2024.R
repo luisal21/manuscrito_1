@@ -391,7 +391,7 @@ permutest(dispersion6)
 plot(dispersion6, hull=FALSE, ellipse=T) ##sd ellipse
 
 
-#### Nectar volume ####
+#### NECTAR VOLUME ####
 # Loading nectar volume combined database
 volumen = read.csv("nectar_volume.csv", header = T)
 head(volumen)
@@ -427,6 +427,53 @@ summary(volu2) #, dispersion=1
 Anova(volu2)
 shapiro.test(residuals(volu2))
 plot(residuals(volu2))
+
+# Plot of nectar volume by species and floral sex
+volumen2 <- volumen %>%
+  mutate(especie = fct_relevel(especie,
+                                "1CF","2CPF", "4CAS", "3CPP", "5CAA", "6CM"))
+
+
+ggplot(volumen2, aes(x = especie, y = VN, fill = especie))+
+  geom_boxplot(alpha = 0.5)+
+  #geom_point(size = 2, alpha = 0.3, 
+  #           position = position_jitter(seed = 1, width = .1))+
+  facet_wrap(~sexo, scales = "free")+
+  labs(x="Species", y = "Nectar volume (μl)")+
+  scale_x_discrete(labels=c("1CF" = "CF", "2CPF" = "CPF",
+                            "4CAS" = "CAS", "3CPP" = "CPP", "5CAA" = "CAA",
+                            "6CM" = "CM"))+
+  #theme_bw()+
+  theme_classic()+
+  theme(axis.text = element_text(face = "bold"))+
+  theme(legend.position = "none")+
+  scale_fill_brewer(palette = "Dark2")
+
+
+
+#ggplot(hem_nec, aes(x=especie,y=VN, fill = condición))+
+  #geom_boxplot()+
+  #geom_point(size = 2, alpha = .3, #aes(color = especie)
+  #           position = position_jitter(seed = 1, width = .1))+
+  #labs(x="Especies", y = "Volumen de néctar (μl)")+
+  #scale_x_discrete(labels=c("1CF" = "CF", "2CPF" = "CPF",
+  #                          "3CPP" = "CPP", "4CAS" = "CAS", "5CAA" = "CAA",
+  #                          "6CM" = "CM"))+
+  #theme_bw()+
+  #theme(axis.text = element_text(face = "bold"))+
+  #scale_color_discrete(name="Species",
+  #                     labels = c("CF", "CPF", "CPP", "CAS", "CAA", "CM"))+
+  annotate("text", x=1, y=35, label= "ab", size = 5)+
+  annotate("text", x=2, y=50, label= "a", size = 5)+
+  annotate("text", x=3, y=205, label= "c", size = 5)+
+  annotate("text", x=4, y=65, label= "a", size = 5)+
+  annotate("text", x=5, y=177, label= "b", size = 5)+
+  annotate("text", x=6, y=165, label= "bc", size = 5)+
+  annotate("text", x=1.5, y= 200, label = "F=11.44, gl=5, p < 0.001")+
+  #theme(legend.position = "none")+
+  #theme(axis.title.x = element_blank())+
+
+
 
 
 #### Nectar sugar concentrations ####
@@ -563,342 +610,13 @@ model_means_cld_total
 
 
 
-##### PCA de aminoacidos de flores hembra #####
-amino = read.csv("concentraciones_aminoacidos.csv", header = TRUE)
-str(amino)
-head(amino)
-tapply(amino$Asp, list(amino$spp,amino$sexo_flor), length)
-tapply(amino$Asp, list(amino$condición, amino$sexo_flor), mean)
-
-# concentración de aminoacidos en flores hembra
-amino_hem = subset(amino, sexo_flor == "H")
-str(amino_hem)
-# analisis multivariado de normalidad
-mvn(amino_hem[8:24], mvnTest = "hz", univariateTest = "SW", 
-    univariatePlot = "histogram")
-
-# concentración de aminoacidos en flores hembra
-amino_mac = subset(amino, sexo_flor == "M")
-str(amino_mac)
-# analisis multivariado de normalidad
-mvn(amino_mac[8:24], mvnTest = "hz", univariateTest = "SW", 
-    univariatePlot = "histogram")
-
-# PCA de caracteres del néctar de flores hembra
-# visualizando todas las combinaciones entre las variables
-pairs(amino_hem[8:24], lower.panel = NULL)
-# Calculando el PCA para flores hembra
-pca4 = prcomp(amino_hem[8:24], scale = T)
-summary(pca4)
-# Obteniendo información sobre los eigenvalues
-get_eigenvalue(pca4)
-# calculando la varianza explicada por cada componente
-fviz_eig(pca4, addlabels = T)
-# información que podemos obtener de las variables analizadas
-var = get_pca_var(pca4); var
-# Visualización de las variables
-fviz_pca_var(pca4, col.var = "black")
-
-# correlaciones entre calidades de variables
-corrplot(var$cos2, is.corr = F)
-# Calidad de cada variable 
-fviz_cos2(pca4, choice = "var", axes = 1:2)
-# graficando las variables en el mapa de factores
-fviz_pca_var(pca4, col.var = "cos2",
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
-             repel = TRUE # Avoid text overlapping
-)
-# Contribución a los componentes
-head(var$contrib)
-corrplot(var$contrib, is.corr=FALSE)    
-
-# Contributions of variables to PC1
-fviz_contrib(pca4, choice = "var", axes = 1, top = 10)
-# Contributions of variables to PC2
-fviz_contrib(pca4, choice = "var", axes = 2, top = 10)
-# contribución combinada de los componentes 1  y 2
-fviz_contrib(pca4, choice = "var", axes = 1:2, top = 10)
-# visualizando las variables coloreadas por contribución
-fviz_pca_var(pca4, col.var = "contrib",
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07")
-)
-
-### Graph of individuals (rows)
-ind = get_pca_ind(pca4)
-ind
-
-fviz_pca_ind(pca4)
-# Visualizando los individuos por cos2
-fviz_pca_ind(pca4, col.ind = "cos2", 
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-             repel = TRUE # Avoid text overlapping (slow if many points)
-)
-#
-fviz_pca_ind(pca4, pointsize = "cos2", 
-             pointshape = 21, fill = "#E7B800",
-             repel = TRUE # Avoid text overlapping (slow if many points)
-)
-
-# Total contribution on PC1 and PC2
-fviz_contrib(pca4, choice = "ind", axes = 1:2)
-
-# Agrupado por condición (SIN elipse)
-fviz_pca_ind(pca4,
-             geom.ind = "point", # show points only (nbut not "text")
-             fill.ind = amino_hem$condición, # color by groups
-             palette = c("#00AFBB", "#E7B800"),
-             #addEllipses = TRUE, # Concentration ellipses
-             #ellipse.type = "euclid",
-             legend.title = "Condition",
-             title = "",
-             pointshape=21,
-             pointsize = 2
-)+
- labs(x = "PC 1 (63.5%)", y = "PC 2 (11.8%)")
-
-# Agrupado por condición (CON elipse)
-fviz_pca_ind(pca4,
-             geom.ind = "point", # show points only (nbut not "text")
-             fill.ind = amino_hem$condición, # color by groups
-             palette = c("#00AFBB", "#E7B800"),
-             addEllipses = TRUE, # Concentration ellipses
-             #ellipse.type = "euclid",
-             legend.title = "Condition",
-             title = "",
-             pointshape=21,
-             pointsize = 2,
-             label = "none"
-)+
-  labs(x = "PC 1 (63.5%)", y = "PC 2 (11.8%)")
-
-
-# Agrupado por especie
-#fviz_pca_ind(pca4,
-#             geom.ind = "point", # show points only (nbut not "text")
-#             col.ind = nectar_h$spp, # color by groups
-#             palette = c("#00AFBB", "#E7B800","#FC4E07", "#00AFDB",
-#                         "#E7B850"),
-#             addEllipses = TRUE, # Concentration ellipses
-#             #ellipse.type = "confidence",
-#             legend.title = "Groups"
-#)
-
-### agrupado por condición + las variables
-#fviz_pca_biplot(pca4,
-#                col.ind = nectar_h$condicion, palette = "jco",
-#                addEllipses = TRUE, label = "var",
-#                col.var = "black", repel = TRUE,
-#                legend.title = "Condition"
-#)
-
-library(MVN)
-# Flores hembra
-mvn(amino_hem[8:24], mvnTest = "hz", univariateTest = "SW", 
-    univariatePlot = "histogram")
-
-
-
-# Flores macho
-mvn(amino_mac[8:24], mvnTest = "hz", univariateTest = "SW", 
-    univariatePlot = "histogram")
-
-
-# PERMANOVA de aminoacidos de flores hembra
-str(amino_hem)
-amino_hem[8:24]
-dune8 = amino_hem[8:24]
-# Calculando distancia euclidiana
-set.seed(0)
-# permanova
-dune.div8 <- adonis2(dune8 ~ condición, data = amino_hem,
-                     permutations = 999, method="euclidean")
-dune.div8
-
-# calculando PERMANOVA por especie
-dune.div8 <- adonis2(dune8 ~ spp, data = nectar_h,
-                     permutations = 999, method="euclidean")
-dune.div8
-
-# overall tests
-#adonis2(dune ~ especie, data = hembras, 
-#        permutations = 999, method="euclidean", by = NULL)
-
-# calculando beta dispersión (homogeneidad de varianzas)
-dispersion5 <- betadisper(dune.dist5, group=amino$condición)
-permutest(dispersion5)
-plot(dispersion5, hull=FALSE, ellipse=T) ##sd ellipse
-# calculando dispersión por especie
-dispersion6 <- betadisper(dune.dist5, group=amino$spp)
-permutest(dispersion6)
-plot(dispersion6, hull=FALSE, ellipse=T) ##sd ellipse
-# calculando dispersión por sexo
-dispersion6 <- betadisper(dune.dist5, group=amino$sexo_flor)
-permutest(dispersion6)
-plot(dispersion6, hull=FALSE, ellipse=T) ##sd ellipse
-
-#### PCA DE AMINOACIDOS DE FLORES MACHO ####
-# concentración de aminoacidos en flores MACHO
-amino_mac = subset(amino, sexo_flor == "M")
-str(amino_mac)
-# analisis multivariado de normalidad
-mvn(amino_mac[8:24], mvnTest = "hz", univariateTest = "SW", 
-    univariatePlot = "histogram")
-
-# PCA de caracteres del néctar de flores hembra
-# visualizando todas las combinaciones entre las variables
-pairs(amino_mac[8:24], lower.panel = NULL)
-# Calculando el PCA para flores hembra
-pca5 = prcomp(amino_mac[8:24], scale = T)
-summary(pca5)
-# Obteniendo información sobre los eigenvalues
-get_eigenvalue(pca5)
-# calculando la varianza explicada por cada componente
-fviz_eig(pca5, addlabels = T)
-# información que podemos obtener de las variables analizadas
-var = get_pca_var(pca5); var
-# Visualización de las variables
-fviz_pca_var(pca5, col.var = "black")
-
-# correlaciones entre calidades de variables
-corrplot(var$cos2, is.corr = F)
-# Calidad de cada variable 
-fviz_cos2(pca5, choice = "var", axes = 1:2)
-# graficando las variables en el mapa de factores
-fviz_pca_var(pca5, col.var = "cos2",
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"), 
-             repel = TRUE # Avoid text overlapping
-)
-# Contribución a los componentes
-head(var$contrib)
-corrplot(var$contrib, is.corr=FALSE)    
-
-# Contributions of variables to PC1
-fviz_contrib(pca5, choice = "var", axes = 1, top = 10)
-# Contributions of variables to PC2
-fviz_contrib(pca5, choice = "var", axes = 2, top = 10)
-# contribución combinada de los componentes 1  y 2
-fviz_contrib(pca5, choice = "var", axes = 1:2, top = 10)
-# visualizando las variables coloreadas por contribución
-fviz_pca_var(pca5, col.var = "contrib",
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07")
-)
-
-
-### Graph of individuals (rows)
-ind = get_pca_ind(pca5)
-ind
-
-fviz_pca_ind(pca5)
-# Visualizando los individuos por cos2
-fviz_pca_ind(pca5, col.ind = "cos2", 
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-             repel = TRUE # Avoid text overlapping (slow if many points)
-)
-#
-fviz_pca_ind(pca5, pointsize = "cos2", 
-             pointshape = 21, fill = "#E7B800",
-             repel = TRUE # Avoid text overlapping (slow if many points)
-)
-
-# Total contribution on PC1 and PC2
-fviz_contrib(pca5, choice = "ind", axes = 1:2)
-
-# Agrupado por condición (SIN elipse)
-fviz_pca_ind(pca5,
-             geom.ind = "point", # show points only (nbut not "text")
-             fill.ind = amino_mac$condición, # color by groups
-             palette = c("#00AFBB", "#E7B800"),
-             #addEllipses = TRUE, # Concentration ellipses
-             #ellipse.type = "euclid",
-             legend.title = "Condition",
-             title = "",
-             pointshape=21,
-             pointsize = 2
-)+
- labs(x = "PC 1 (61.7%)", y = "PC 2 (12.3%)")
-
-# Agrupado por condición (CON elipse)
-fviz_pca_ind(pca5,
-             geom.ind = "point", # show points only (nbut not "text")
-             fill.ind = amino_mac$condición, # color by groups
-             palette = c("#00AFBB", "#E7B800"),
-             addEllipses = TRUE, # Concentration ellipses
-             #ellipse.type = "euclid",
-             legend.title = "Condition",
-             title = "",
-             pointshape=21,
-             pointsize = 2,
-             label = "none"
-)+
-  labs(x = "PC 1 (61.7%)", y = "PC 2 (12.3%)")
-
-
-# Agrupado por especie
-#fviz_pca_ind(pca4,
-#             geom.ind = "point", # show points only (nbut not "text")
-#             col.ind = nectar_h$spp, # color by groups
-#             palette = c("#00AFBB", "#E7B800","#FC4E07", "#00AFDB",
-#                         "#E7B850"),
-#             addEllipses = TRUE, # Concentration ellipses
-#             #ellipse.type = "confidence",
-#             legend.title = "Groups"
-#)
-
-### agrupado por condición + las variables
-#fviz_pca_biplot(pca4,
-#                col.ind = nectar_h$condicion, palette = "jco",
-#                addEllipses = TRUE, label = "var",
-#                col.var = "black", repel = TRUE,
-#                legend.title = "Condition"
-#)
-
-library(MVN)
-# Flores macho
-mvn(amino_mac[8:24], mvnTest = "hz", univariateTest = "SW", 
-    univariatePlot = "histogram")
-
-
-# PERMANOVA de aminoacidos de flores hembra
-str(amino_mac)
-amino_mac[8:24]
-dune9 = amino_mac[8:24]
-# Calculando distancia euclidiana
-set.seed(0)
-# permanova
-dune.div9 <- adonis2(dune9 ~ condición, data = amino_mac,
-                     permutations = 999, method="euclidean")
-dune.div9
-
-# calculando PERMANOVA por especie
-dune.div8 <- adonis2(dune8 ~ spp, data = nectar_h,
-                     permutations = 999, method="euclidean")
-dune.div8
-
-# overall tests
-#adonis2(dune ~ especie, data = hembras, 
-#        permutations = 999, method="euclidean", by = NULL)
-
-# calculando beta dispersión (homogeneidad de varianzas)
-dispersion5 <- betadisper(dune.dist5, group=amino$condición)
-permutest(dispersion5)
-plot(dispersion5, hull=FALSE, ellipse=T) ##sd ellipse
-# calculando dispersión por especie
-dispersion6 <- betadisper(dune.dist5, group=amino$spp)
-permutest(dispersion6)
-plot(dispersion6, hull=FALSE, ellipse=T) ##sd ellipse
-# calculando dispersión por sexo
-dispersion6 <- betadisper(dune.dist5, group=amino$sexo_flor)
-permutest(dispersion6)
-plot(dispersion6, hull=FALSE, ellipse=T) ##sd ellipse
-
-
-#### AMINOACIDOS DEL NECTAR FLORAL DE CUCURBITA ####
+#### AMINO ACIDS OF NECTAR ####
 amino = read.csv("concentraciones_aminoacidos.csv", header = TRUE)
 str(amino)
 head(amino)
 tapply(amino$Asp, list(amino$spp,amino$sexo_flor), length)
 
-# media de cada aminoacido por especie
+# Mean of each amino acids by species media
 amino2 = amino %>%
   group_by(spp, sexo_flor)  %>%
   dplyr::summarize(Asp2 = mean(Asp), Glu2 = mean(Glu), Ser2 = mean(Ser),
@@ -908,9 +626,8 @@ amino2 = amino %>%
                    Phe2 = mean(Phe), Ile2 = mean(Ile), Leu2 = mean(Leu),
                    Lys2 = mean(Lys), Pro2 = mean(Pro), n = n())
 amino2
-View(amino2)
-#write.csv(amino2, file = "amino_mean.csv")
-# error estandar de cada aminoacido por especie
+
+# Standard error of each amino acid by species
 amino3 = amino %>%
   group_by(condición, sexo_flor)  %>%
   dplyr::summarize(Asp2 = es(Asp), Glu2 = es(Glu), Ser2 = es(Ser),
@@ -921,10 +638,6 @@ amino3 = amino %>%
                    Lys2 = es(Lys), Pro2 = es(Pro), n = n())
 
 amino3
-View(amino3)
-amino3 = as.data.frame(amino2)
-str(amino3)
-write.csv(amino3, file = "amino_condicion.csv")
 
 # Filtering values of C. foetidissima because there are only 2 values
 tapply(amino$Asp, list(amino$spp,amino$sexo_flor), length)
@@ -939,7 +652,6 @@ library(factoextra)
 ### PCA of amino acids by species and floral sex
 head(amino)
 str(amino)
-pairs(amino[8:24])
 # PCA de caracteres del néctar de flores hembra
 # visualizando todas las combinaciones entre las variables
 pairs(amino[8:24], lower.panel = NULL)
@@ -1017,27 +729,43 @@ fviz_pca_ind(pca4,
              palette = c("#00AFBB", "#E7B800"),
              #addEllipses = TRUE, # Concentration ellipses
              #ellipse.type = "euclid",
-             legend.title = "Condition",
+             legend.title = "Floral sex",
              title = "",
              pointshape=21,
              pointsize = 2
 )+
-  labs(x = "PC 1 (54%)", y = "PC 2 (12.7%)")
+  labs(x = "PC 1 (55%)", y = "PC 2 (11%)")
 
 # Agrupado por condición (CON elipse)
 fviz_pca_ind(pca4,
              geom.ind = "point", # show points only (nbut not "text")
-             fill.ind = amino$sexo_flor, # color by groups
+             col.ind = amino$sexo_flor, # color by groups
              palette = c("#00AFBB", "#E7B800"),
              addEllipses = TRUE, # Concentration ellipses
              ellipse.type = "confidence",
-             legend.title = "Condition",
+             legend.title = "Floral sex",
              title = "",
-             pointshape=21,
-             pointsize = 2,
+             pointshape=19,
+             pointsize = 1,
              label = "none"
 )+
-  labs(x = "PC 1 (54%)", y = "PC 2 (12.7%)")
+  labs(x = "PC 1 (55%)", y = "PC 2 (11%)")
+
+# Exporting plot
+# loading packages
+library(gridExtra)
+library(cowplot)
+library(ggpubr)
+# joining plots
+gt <- ggarrange(pca_hembras, pca_machos,
+                ncol = 1, nrow = 2, common.legend = TRUE, legend = "right",
+                labels="AUTO")
+gt
+# Exporting plot
+ggsave("Figure_3.png", device = "png", width = 177, height = 108,
+       units = "mm", dpi = 600, bg = "white")
+
+
 
 
 # Agrupado por especie

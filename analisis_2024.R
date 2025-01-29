@@ -1027,10 +1027,10 @@ fviz_pca_ind(pca4,
 # Agrupado por condición (CON elipse)
 fviz_pca_ind(pca4,
              geom.ind = "point", # show points only (nbut not "text")
-             fill.ind = nectar_h$condicion, # color by groups
+             fill.ind = amino$sexo_flor, # color by groups
              palette = c("#00AFBB", "#E7B800"),
              addEllipses = TRUE, # Concentration ellipses
-             #ellipse.type = "euclid",
+             ellipse.type = "confidence",
              legend.title = "Condition",
              title = "",
              pointshape=21,
@@ -1074,8 +1074,8 @@ mvn(nectar_m[8:29], mvnTest = "hz", univariateTest = "SW",
 
 # PERMANOVA del nectar de flores hembra
 library(vegan)
-str(amino2)
-amino2[8:24]
+str(amino)
+amino[8:24]
 dune8 = amino[8:24]
 # Calculando distancia euclidiana
 set.seed(0)

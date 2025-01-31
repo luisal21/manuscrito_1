@@ -1080,15 +1080,15 @@ mvn(amino_mac[8:24], mvnTest = "hz", univariateTest = "SW",
 
 #### Pollen traits of Cucurbita species ####
 #### pollen production ####
-contador = read.csv("produccion_polen.csv", header = T)
+contador = read.csv("pollen_production.csv", header = T)
 head(contador)
 str(contador)
 
 # Clustering by plant ID
 conta = contador %>%
-  group_by(año, condicion, spp, id_planta) %>%
-  dplyr::summarize(total_mean = mean(polen_total), 
-                   es_total = es(polen_total),
+  group_by(year, condition, spp, id_plant) %>%
+  dplyr::summarize(total_mean = mean(pollen_total), 
+                   es_total = es(pollen_total),
                    n = n())
 conta
 # Descriptive statistics of pollen production.
@@ -1126,48 +1126,48 @@ head(conta3)
 str(conta3)
 
 # Descriptive statistics of pollen size.
-tapply(conta3$tam, conta3$spp, mean)
-tapply(conta3$tam, conta3$spp, es)
-tapply(conta3$tam, conta3$spp, length)
+tapply(conta3$size, conta3$spp, mean)
+tapply(conta3$size, conta3$spp, es)
+tapply(conta3$size, conta3$spp, length)
 
 # Boxplot of pollen size
-boxplot(conta3$tam ~ conta3$spp)
+boxplot(conta3$size ~ conta3$spp)
 
 # kruskal-wallis test of pollen size
-kruskal.test(tam ~ spp, data = conta3)
+kruskal.test(size ~ spp, data = conta3)
 
 # multiple comparisons
-pairwise.wilcox.test(conta3$tam, conta3$spp,
+pairwise.wilcox.test(conta3$size, conta3$spp,
                      p.adjust.method = "holm")
 
 
 #### Protein concentration of pollen ####
-proteinas = read.csv("concen_protein.csv", header = T)
-head(proteinas)
-str(proteinas)
-tapply(proteinas$prot, proteinas$Especie, length)
+protein = read.csv("protein.csv", header = T)
+head(protein)
+str(protein)
+tapply(protein$prot, protein$species, length)
 #proteinas$anoplant  <- paste(proteinas$año, proteinas$PlantID)
 
-# Agrupando por individuos
-conce_prot = proteinas %>%
-  group_by(año, Especie, PlantID, Estatus) %>%
+# Clustering by individual
+conce_prot = protein %>%
+  group_by(year, species, plant_id, condition) %>%
   dplyr::summarize(total_conc = mean(prot), es_total = es(prot), n = n())
 
 # Descriptive statistics of pollen protein concentration
-tapply(conce_prot$total_conc, conce_prot$Especie, mean)
-tapply(conce_prot$total_conc, conce_prot$Especie, es)
-tapply(conce_prot$total_conc, conce_prot$Especie, length)
+tapply(conce_prot$total_conc, conce_prot$species, mean)
+tapply(conce_prot$total_conc, conce_prot$species, es)
+tapply(conce_prot$total_conc, conce_prot$species, length)
 
 
 # GLM of pollen protein concentration
-modpro = glm(total_conc ~ Especie, data = conce_prot, family = gaussian)
+modpro = glm(total_conc ~ species, data = conce_prot, family = gaussian)
 summary(modpro)
 Anova(modpro)
 shapiro.test(residuals(modpro))
 
 
 #### Pollen lipid concentration ####
-lipi = read.csv("lipidos.csv", header = T)
+lipi = read.csv("lipids.csv", header = T)
 head(lipi)
 str(lipi)
 
@@ -1176,29 +1176,29 @@ str(lipi)
 
 # Clustering by species
 conce_lipi = lipi %>%
-  group_by(año, Especie, PlantID, Estatus) %>%
-  dplyr::summarize(total_conc = mean(lipidos), es_total = es(lipidos), n = n())
+  group_by(year, species, plant_id, condition) %>%
+  dplyr::summarize(total_conc = mean(lipids), es_total = es(lipids), n = n())
 conce_lipi
 #write.csv(conce_lipi, file = "conce_lipi.csv")
 
 # Descriptive statistics of pollen lipid concentration
-tapply(conce_lipi$total_conc, conce_lipi$Especie, mean)
-tapply(conce_lipi$total_conc, conce_lipi$Especie, es)
-tapply(conce_lipi$total_conc, conce_lipi$Especie, length)
+tapply(conce_lipi$total_conc, conce_lipi$species, mean)
+tapply(conce_lipi$total_conc, conce_lipi$species, es)
+tapply(conce_lipi$total_conc, conce_lipi$species, length)
 
 
-boxplot(conce_lipi$total_conc ~ conce_lipi$Especie)
+boxplot(conce_lipi$total_conc ~ conce_lipi$species)
 shapiro.test(conce_lipi$total_conc)
 hist(conce_lipi$total_conc)
 
 # modelo
-m1 = glm(total_conc ~ Especie, data = conce_lipi, family = gaussian)
+m1 = glm(total_conc ~ species, data = conce_lipi, family = gaussian)
 summary(m1)
 Anova(m1)
 shapiro.test(residuals(m1))
 # Estimated marginal means 
 lip_compa <- emmeans(m1, 
-                     specs = pairwise ~ Especie, 
+                     specs = pairwise ~ species, 
                      type = "response")
 lip_compa
 lip_compa.m<-lip_compa$emmean 
@@ -1217,24 +1217,24 @@ str(pl)
 
 # Clustering by individual
 pl_res = pl %>%
-  group_by(año, Especie, PlantID, Estatus) %>%
+  group_by(year, species, plant_id, condition) %>%
   dplyr::summarize(total_pl = mean(pl), es_pl = es(pl), n = n())
 pl_res
 
 # Descriptive statistics of protein:lipid ratio
-tapply(pl_res$total_pl, pl_res$Especie, mean)
-tapply(pl_res$total_pl, pl_res$Especie, es)
-tapply(pl_res$total_pl, pl_res$Especie, length)
+tapply(pl_res$total_pl, pl_res$species, mean)
+tapply(pl_res$total_pl, pl_res$species, es)
+tapply(pl_res$total_pl, pl_res$species, length)
 #write.csv(pl_res, file = "pl.csv")
 
 
 # Boxplot of protein:lipid ratio
-boxplot(pl_res$total_pl ~ pl_res$Especie)
+boxplot(pl_res$total_pl ~ pl_res$species)
 #boxplot(pl_res$total_pl ~ pl_res$Estatus)
 shapiro.test(pl_res$total_pl)
 hist(pl_res$total_pl)
 # GLM
-modpl = glm(total_pl ~ Especie, data = pl_res, family = gaussian)
+modpl = glm(total_pl ~ species, data = pl_res, family = gaussian)
 summary(modpl)
 Anova(modpl)
 

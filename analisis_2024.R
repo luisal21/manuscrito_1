@@ -67,6 +67,16 @@ erro = hem_resu2 %>%
                    PL = es(PL), SL = es(SL), OL = es(OL), OD = es(OD), 
                    n = n())
 View(erro)
+# Standard deviation
+stan_dev = hem_resu2 %>%
+  group_by(species) %>%
+  dplyr::summarize(CD = sd(CD), TL = sd(TL), CL = sd(CL), TD1 = sd(TD1), 
+                   TD2 = sd(TD2), TD3 = sd(TD3), NDf = sd(NDf), SD = sd(SD), 
+                   PL = sd(PL), SL = sd(SL), OL = sd(OL), OD = sd(OD), 
+                   n = n())
+View(stan_dev)
+write.csv(stan_dev, file = "desviaciones_flor-hembra.csv")
+
 # Coefficient of variation by species
 CV = hem_resu2 %>%
   group_by(species) %>%
@@ -211,13 +221,18 @@ staminate2 = staminate %>%
             StL = mean(StL), AL = mean(AL), n = n())
 View(staminate2)
 
+# as data.frame
+staminate2 <- as.data.frame(staminate2)
+str(staminate2)
+tapply(staminate2$CD, staminate2$species, length)
+
 #### Descriptive statistics of staminate flowers ####
 # Mean by species
 staminate3 = staminate2 %>%
-  group_by(especie) %>%
+  group_by(species) %>%
   summarise(CD = mean(CD), TL = mean(TL), CL = mean(CL), TD1 = mean(TD1),
             TD2 = mean(TD2), TD3 = mean(TD3), NDm = mean(NDm), AD = mean(AD),
-            StL = mean(StL), AL = mean(AL), VN = mean(VN), n = n())
+            StL = mean(StL), AL = mean(AL), n = n())
 View(staminate3)
 # Standard error by species
 erro_m = staminate2 %>%
@@ -226,6 +241,15 @@ erro_m = staminate2 %>%
             TD2 = es(TD2), TD3 = es(TD3), NDm = es(NDm), AD = es(AD), 
             StL = es(StL), AL = es(AL), VN = es(VN), n = n())
 View(erro_m)
+# SD
+erro_m = staminate2 %>%
+  group_by(species) %>%
+  summarise(CD = sd(CD), TL = sd(TL), CL = sd(CL), TD1 = sd(TD1), 
+            TD2 = sd(TD2), TD3 = sd(TD3), NDm = sd(NDm), AD = sd(AD), 
+            StL = sd(StL), AL = sd(AL), n = n())
+View(erro_m)
+write.csv(erro_m, file = "desviaciones_flor-macho.csv")
+
 # Coefficient of variance by especies
 cv_m = staminate2 %>%
   group_by(especie) %>%
@@ -375,6 +399,7 @@ head(volume)
 str(volume)
 # Descriptive statistics
 tapply(volume$VN, list(volume$species, volume$sex), mean)
+tapply(volume$VN, list(volume$species, volume$sex), sd)
 tapply(volume$VN, list(volume$species, volume$sex), es)
 tapply(volume$VN, list(volume$species, volume$sex), length)
 
@@ -507,25 +532,25 @@ tapply(sugars2$total_con, list(sugars2$spp, sugars2$sex), length)
 tapply(sugars2$total_con, list(sugars2$spp,
                                        sugars2$sex), mean)
 tapply(sugars2$total_con, list(sugars2$spp,
-                                       sugars2$sex), es)
+                                       sugars2$sex), sd)
 
 # Descriptive statistics of fructose concentration
 tapply(sugars2$fructose, list(sugars2$spp,
                                      sugars2$sex), mean)
 tapply(sugars2$fructose, list(sugars2$spp,
-                                     sugars2$sex), es)
+                                     sugars2$sex), sd)
 
 # Descriptive statistics of glucose concentration
 tapply(sugars2$glucose, list(sugars2$spp,
                                     sugars2$sex), mean)
 tapply(sugars2$glucose, list(sugars2$spp,
-                                    sugars2$sex), es)
+                                    sugars2$sex), sd)
 
 # Descriptive statistics of sucrose concentration
 tapply(sugars2$sucrose, list(sugars2$spp,
                                      sugars2$sex), mean)
 tapply(sugars2$sucrose, list(sugars2$spp,
-                                    sugars2$sex), es)
+                                    sugars2$sex), sd)
 
 # Separando flores hembra
 # histogramas de cada azucar
@@ -1095,7 +1120,7 @@ conta
 tapply(conta$total_mean, conta$spp, mean)
 tapply(conta$total_mean, conta$spp, es)
 tapply(conta$total_mean, conta$spp, length)
-
+tapply(conta$total_mean, conta$spp, sd)
 
 # boxplot by species
 boxplot(conta$total_mean ~ conta$spp)
@@ -1129,6 +1154,7 @@ str(conta3)
 tapply(conta3$size, conta3$spp, mean)
 tapply(conta3$size, conta3$spp, es)
 tapply(conta3$size, conta3$spp, length)
+tapply(conta3$size, conta3$spp, sd)
 
 # Boxplot of pollen size
 boxplot(conta3$size ~ conta3$spp)
@@ -1142,22 +1168,22 @@ pairwise.wilcox.test(conta3$size, conta3$spp,
 
 
 #### Protein concentration of pollen ####
-protein = read.csv("protein.csv", header = T)
+protein = read.csv("protein_pollen.csv", header = T)
 head(protein)
 str(protein)
-tapply(protein$prot, protein$species, length)
+tapply(protein$protein, protein$species, length)
 #proteinas$anoplant  <- paste(proteinas$año, proteinas$PlantID)
 
 # Clustering by individual
 conce_prot = protein %>%
   group_by(year, species, plant_id, condition) %>%
-  dplyr::summarize(total_conc = mean(prot), es_total = es(prot), n = n())
+  dplyr::summarize(total_conc = mean(protein), es_total = es(protein), n = n())
 
 # Descriptive statistics of pollen protein concentration
 tapply(conce_prot$total_conc, conce_prot$species, mean)
 tapply(conce_prot$total_conc, conce_prot$species, es)
 tapply(conce_prot$total_conc, conce_prot$species, length)
-
+tapply(conce_prot$total_conc, conce_prot$species, sd)
 
 # GLM of pollen protein concentration
 modpro = glm(total_conc ~ species, data = conce_prot, family = gaussian)
@@ -1167,7 +1193,7 @@ shapiro.test(residuals(modpro))
 
 
 #### Pollen lipid concentration ####
-lipi = read.csv("lipids.csv", header = T)
+lipi = read.csv("lipids_pollen.csv", header = T)
 head(lipi)
 str(lipi)
 
@@ -1185,7 +1211,7 @@ conce_lipi
 tapply(conce_lipi$total_conc, conce_lipi$species, mean)
 tapply(conce_lipi$total_conc, conce_lipi$species, es)
 tapply(conce_lipi$total_conc, conce_lipi$species, length)
-
+tapply(conce_lipi$total_conc, conce_lipi$species, sd)
 
 boxplot(conce_lipi$total_conc ~ conce_lipi$species)
 shapiro.test(conce_lipi$total_conc)
@@ -1225,6 +1251,7 @@ pl_res
 tapply(pl_res$total_pl, pl_res$species, mean)
 tapply(pl_res$total_pl, pl_res$species, es)
 tapply(pl_res$total_pl, pl_res$species, length)
+tapply(pl_res$total_pl, pl_res$species, sd)
 #write.csv(pl_res, file = "pl.csv")
 
 

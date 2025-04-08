@@ -365,8 +365,6 @@ model_means_cld_OD
 # exportando tabla de la estimated marginal means
 #write.csv(model_means_cld_OD, file = "model_means_cld_OD.csv")
 
-
-
 #### Principal component analysis (PCA) of pistillate's floral traits ####
 # First 6 lines of the database
 head(hem_resu2)
@@ -537,6 +535,221 @@ cv_m = staminate2 %>%
   summarise(CD = cv(CD), TL = cv(TL), CL = cv(CL), TD1 = cv(TD1),
             TD2 = cv(TD2), TD3 = cv(TD3), NDm = cv(NDm), AD = cv(AD), 
             StL = cv(StL), AL = cv(AL), VN = cv(VN), n = n())
+
+#### GLMMs de flores macho ####
+shapiro.test(staminate2$CD) # gaussian
+shapiro.test(staminate2$TL) # Gamma
+shapiro.test(staminate2$CL) # gaussian
+shapiro.test(staminate2$TD1) # Gamma
+shapiro.test(staminate2$TD2) # gaussian
+shapiro.test(staminate2$TD3) # Gamma
+shapiro.test(staminate2$NDm) # Gamma
+shapiro.test(staminate2$AD) # Gamma
+shapiro.test(staminate2$StL) # Gamma
+shapiro.test(staminate2$AL) # Gamma
+
+### GLMs comparando el CD entre las diferentes especies ###
+mod14 <- glm(CD ~ species, data = staminate2,
+             family = gaussian) #escogí este modelo
+summary(mod14)
+Anova(mod14)
+# Estimated marginal means 
+egCD_ma <- emmeans(mod14, 
+                   specs = pairwise ~ species, 
+                   type = "response")
+egCD_ma
+egCD_ma.m<-egCD_ma$emmean 
+egCD_ma.m
+model_means_cld_CD_ma <- cld(object = egCD_ma.m,
+                             adjust = "sidak",
+                             Letter = letters, 
+                             alpha = 0.05)
+model_means_cld_CD_ma
+# exportando tabla de la estimated marginal means
+#write.csv(model_means_cld_CD_ma, file = "model_means_cld_CD_ma.csv")
+
+### GLMs comparando el TL entre años y entre las diferentes especies ###
+mod15 <- glm(TL ~ species, data = staminate2,
+               family = "Gamma") #escogí este modelo
+summary(mod15)
+Anova(mod15)
+# Estimated marginal means 
+egTL_ma <- emmeans(mod15, 
+                   specs = pairwise ~ species, 
+                   type = "response")
+egTL_ma
+egTL_ma.m<-egTL_ma$emmean 
+egTL_ma.m
+model_means_cld_TL_ma <- cld(object = egTL_ma.m,
+                             adjust = "sidak",
+                             Letter = letters, 
+                             alpha = 0.05)
+model_means_cld_TL_ma
+# exportando tabla de la estimated marginal means
+#write.csv(model_means_cld_TL_ma, file = "model_means_cld_TL_ma.csv")
+
+### GLMs comparando el CL entre años y entre las diferentes especies ###
+mod16 <- glm(CL ~ species, data = staminate2,
+               family = gaussian) #escogí este modelo
+summary(mod16)
+Anova(mod16)
+# Estimated marginal means 
+egCL_ma <- emmeans(mod16, 
+                   specs = pairwise ~ species, 
+                   type = "response")
+egCL_ma
+egCL_ma.m<-egCL_ma$emmean 
+egCL_ma.m
+model_means_cld_CL_ma <- cld(object = egCL_ma.m,
+                             adjust = "sidak",
+                             Letter = letters, 
+                             alpha = 0.05)
+model_means_cld_CL_ma
+# exportando tabla de la estimated marginal means
+#write.csv(model_means_cld_CL_ma, file = "model_means_cld_CL_ma.csv")
+
+### GLMs comparando el TD1 entre años y entre las diferentes especies ###
+mod17 <- glm(TD1 ~ species, data = staminate2,
+               family = "Gamma") #escogí este modelo
+summary(mod17)
+Anova(mod17)
+# Estimated marginal means 
+egTD1_ma <- emmeans(mod17, 
+                    specs = pairwise ~ species, 
+                    type = "response")
+egTD1_ma
+egTD1_ma.m<-egTD1_ma$emmean 
+egTD1_ma.m
+model_means_cld_TD1_ma <- cld(object = egTD1_ma.m,
+                              adjust = "sidak",
+                              Letter = letters, 
+                              alpha = 0.05)
+model_means_cld_TD1_ma
+# exportando tabla de la estimated marginal means
+#write.csv(model_means_cld_TD1_ma, file = "model_means_cld_TD1_ma.csv")
+
+### GLMs comparando el TD2 entre años y entre las diferentes especies ###
+mod18 <- glm(TD2 ~ species, data = staminate2,
+               family = gaussian) #escogí este modelo
+summary(mod18)
+Anova(mod18)
+# Estimated marginal means 
+egTD2_ma <- emmeans(mod18, 
+                    specs = pairwise ~ species, 
+                    type = "response")
+egTD2_ma
+egTD2_ma.m<-egTD2_ma$emmean 
+egTD2_ma.m
+model_means_cld_TD2_ma <- cld(object = egTD2_ma.m,
+                              adjust = "sidak",
+                              Letter = letters, 
+                              alpha = 0.05)
+model_means_cld_TD2_ma
+# exportando tabla de la estimated marginal means
+#write.csv(model_means_cld_TD2_ma, file = "model_means_cld_TD2_ma.csv")
+
+### GLMs comparando el TD3 entre años y entre las diferentes especies ###
+mod19 <- glm(TD3 ~ species, data = staminate2,
+               family = "Gamma") #escogí este modelo
+summary(mod19)
+Anova(mod19)
+# Estimated marginal means 
+egTD3_ma <- emmeans(mod19, 
+                    specs = pairwise ~ species, 
+                    type = "response")
+egTD3_ma
+egTD3_ma.m<-egTD3_ma$emmean 
+egTD3_ma.m
+model_means_cld_TD3_ma <- cld(object = egTD3_ma.m,
+                              adjust = "sidak",
+                              Letter = letters, 
+                              alpha = 0.05)
+model_means_cld_TD3_ma
+# exportando tabla de la estimated marginal means
+#write.csv(model_means_cld_TD3_ma, file = "model_means_cld_TD3_ma.csv")
+
+### GLMs comparando el TD3 entre años y entre las diferentes especies ###
+mod20 <- glm(NDm ~ species, data = staminate2,
+               family = "Gamma") #escogí este modelo
+summary(mod20)
+Anova(mod20)
+# Estimated marginal means 
+egNDm_ma <- emmeans(mod20, 
+                    specs = pairwise ~ species, 
+                    type = "response")
+egNDm_ma
+egNDm_ma.m<-egNDm_ma$emmean 
+egNDm_ma.m
+model_means_cld_NDm_ma <- cld(object = egNDm_ma.m,
+                              adjust = "sidak",
+                              Letter = letters, 
+                              alpha = 0.05)
+model_means_cld_NDm_ma
+# exportando tabla de la estimated marginal means
+#write.csv(model_means_cld_NDm_ma, file = "model_means_cld_NDm_ma.csv")
+
+### GLMs comparando el AD entre años y entre las diferentes especies ###
+mod22 <- glm(AD ~ species, data = staminate2,
+               family = "Gamma") #escogí este modelo
+summary(mod22)
+Anova(mod22)
+# Estimated marginal means 
+egAD_ma <- emmeans(mod22, 
+                   specs = pairwise ~ species, 
+                   type = "response")
+egAD_ma
+egAD_ma.m<-egAD_ma$emmean 
+egAD_ma.m
+#
+model_means_cld_AD_ma <- cld(object = egAD_ma.m,
+                             adjust = "sidak",
+                             Letter = letters, 
+                             alpha = 0.05)
+model_means_cld_AD_ma
+# exportando tabla de la estimated marginal means
+#write.csv(model_means_cld_AD_ma, file = "model_means_cld_AD_ma.csv")
+
+### GLMs comparando el StL entre años y entre las diferentes especies ###
+mod23 <- glm(StL ~ species, data = staminate2,
+               family = "Gamma") #escogí este modelo
+summary(mod23)
+Anova(mod23)
+# Estimated marginal means 
+egStL_ma <- emmeans(mod23, 
+                    specs = pairwise ~ species, 
+                    type = "response")
+egStL_ma
+egStL_ma.m<-egStL_ma$emmean 
+egStL_ma.m
+
+model_means_cld_StL_ma <- cld(object = egStL_ma.m,
+                              adjust = "sidak",
+                              Letter = letters, 
+                              alpha = 0.05)
+model_means_cld_StL_ma
+# exportando tabla de la estimated marginal means
+#write.csv(model_means_cld_StL_ma, file = "model_means_cld_StL_ma.csv")
+
+### GLMs comparando el AL entre años y entre las diferentes especies ###
+mod24 <- glm(AL ~ species, data = staminate2,
+               family = "Gamma") #escogí este modelo
+summary(mod24)
+Anova(mod24)
+# Estimated marginal means 
+egAL_ma <- emmeans(mod24, 
+                   specs = pairwise ~ species, 
+                   type = "response")
+egAL_ma
+egAL_ma.m<-egAL_ma$emmean 
+egAL_ma.m
+
+model_means_cld_AL_ma <- cld(object = egAL_ma.m,
+                             adjust = "sidak",
+                             Letter = letters, 
+                             alpha = 0.05)
+model_means_cld_AL_ma
+# exportando tabla de la estimated marginal means
+#write.csv(model_means_cld_AL_ma, file = "model_means_cld_AL_ma.csv")
 
 #### Principal component analysis (PCA) of staminate floral traits ####
 head(staminate2)
